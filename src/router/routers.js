@@ -75,7 +75,7 @@ export default [
     name: 'components',
     meta: {
       icon: 'logo-buffer',
-      title: '业务中心'
+      title: '设备管理'
     },
     component: Main,
     children: [
@@ -147,28 +147,37 @@ export default [
         name: 'tables_page',
         meta: {
           icon: 'md-grid',
-          title: '设备管理'
+          title: '产品列表'
         },
         component: () => import('@/view/components/tables/tables.vue')
       },
       {
-        path: 'split_pane_page',
-        name: 'split_pane_page',
+        path: 'equipmentList',
+        name: 'equipmentList',
         meta: {
-          icon: 'md-pause',
-          title: '分割窗口'
+          icon: 'logo-codepen',
+          title: '设备列表'
         },
-        component: () => import('@/view/components/split-pane/split-pane.vue')
-      }
+        component: () => import('@/view/components/equipment/equipmentList.vue')
+      },
       // {
-      //   path: 'markdown_page',
-      //   name: 'markdown_page',
+      //   path: 'split_pane_page',
+      //   name: 'split_pane_page',
       //   meta: {
-      //     icon: 'logo-markdown',
-      //     title: 'Markdown编辑器'
+      //     icon: 'logo-codepen',
+      //     title: '设备列表'
       //   },
-      //   component: () => import('@/view/components/markdown/markdown.vue')
+      //   component: () => import('@/view/components/split-pane/split-pane.vue')
       // },
+      {
+        path: 'markdown_page',
+        name: 'markdown_page',
+        meta: {
+          icon: 'logo-dropbox',
+          title: '分组管理'
+        },
+        component: () => import('@/view/components/markdown/markdown.vue')
+      }
       // {
       //   path: 'editor_page',
       //   name: 'editor_page',
