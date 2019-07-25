@@ -143,17 +143,17 @@ export default [
       //   component: () => import('@/view/components/cropper/cropper.vue')
       // },
       {
-        path: 'tables_page',
-        name: 'tables_page',
+        path: 'productList_page',
+        name: 'productList_page',
         meta: {
           icon: 'md-grid',
           title: '产品列表'
         },
-        component: () => import('@/view/components/tables/tables.vue')
+        component: () => import('@/view/components/product/product.vue')
       },
       {
-        path: 'equipmentList',
-        name: 'equipmentList',
+        path: 'equipmentList_page',
+        name: 'equipmentList_page',
         meta: {
           icon: 'logo-codepen',
           title: '设备列表'
@@ -170,13 +170,13 @@ export default [
       //   component: () => import('@/view/components/split-pane/split-pane.vue')
       // },
       {
-        path: 'markdown_page',
-        name: 'markdown_page',
+        path: 'groupmana_page',
+        name: 'groupmana_page',
         meta: {
           icon: 'logo-dropbox',
           title: '分组管理'
         },
-        component: () => import('@/view/components/markdown/markdown.vue')
+        component: () => import('@/view/components/groupmana/groupmana.vue')
       }
       // {
       //   path: 'editor_page',
@@ -198,35 +198,35 @@ export default [
       // }
     ]
   },
-  // {
-  //   path: '/update',
-  //   name: 'update',
-  //   meta: {
-  //     icon: 'md-cloud-upload',
-  //     title: '数据上传'
-  //   },
-  //   component: Main,
-  //   children: [
-  //     {
-  //       path: 'update_table_page',
-  //       name: 'update_table_page',
-  //       meta: {
-  //         icon: 'ios-document',
-  //         title: '上传Csv'
-  //       },
-  //       component: () => import('@/view/update/update-table.vue')
-  //     },
-  //     {
-  //       path: 'update_paste_page',
-  //       name: 'update_paste_page',
-  //       meta: {
-  //         icon: 'md-clipboard',
-  //         title: '粘贴表格数据'
-  //       },
-  //       component: () => import('@/view/update/update-paste.vue')
-  //     }
-  //   ]
-  // },
+  {
+    path: '/permissions',
+    name: 'permissions',
+    meta: {
+      icon: 'md-cog',
+      title: '权限管理'
+    },
+    component: Main,
+    children: [
+      {
+        path: 'rolemana_page',
+        name: 'rolemana_page',
+        meta: {
+          icon: 'ios-people',
+          title: '角色管理'
+        },
+        component: () => import('@/view/permissions/rolemana/rolemana.vue')
+      },
+      {
+        path: 'accountmana_page',
+        name: 'accountmana_page',
+        meta: {
+          icon: 'md-person-add',
+          title: '账户管理'
+        },
+        component: () => import('@/view/permissions/accountmana/accountmana.vue')
+      }
+    ]
+  },
   // {
   //   path: '/excel',
   //   name: 'excel',
