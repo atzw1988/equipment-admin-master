@@ -2,10 +2,10 @@
   <div>
     <Card v-if="is_add_show && is_detail_show">
       <div class="search-con search-con-top">
-        <Select v-model="sel_product" clearable style="width:200px" placeholder="全部产品">
+        <Select v-model="sel_product" clearable style="width:150px" placeholder="全部产品">
           <Option v-for="item in productList" :value="item.value" :key="item.value">{{ item.label }}</Option>
         </Select>&nbsp;
-        <Select v-model="sel_operator" clearable style="width:200px" placeholder="全部运营商">
+        <Select v-model="sel_operator" clearable style="width:150px" placeholder="全部运营商">
           <Option v-for="item in operatorList" :value="item.value" :key="item.value">{{ item.label }}</Option>
         </Select>&nbsp;&nbsp;
         <span>设备总数：{{eq_total}}</span>
@@ -20,52 +20,47 @@
         <Button @click="handleSearch" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
         <Button @click="handleAdd" class="add-btn" type="success"><Icon type="search"/>&nbsp;添加设备&nbsp;</Button>
         <Button @click="handleBatch" class="add-btn" type="info"><Icon type="search"/>&nbsp;批量添加&nbsp;</Button>
-        <Button @click="handleAdd" class="add-btn" type="error"><Icon type="search"/>&nbsp;删除设备&nbsp;</Button>
+        <Button @click="handleDel" class="add-btn" type="error"><Icon type="search"/>&nbsp;删除设备&nbsp;</Button>
       </div>
-      <Table border :columns="columns" :data="tableData"></Table>
+      <Table @on-selection-change='table_sel' border :columns="columns" :data="tableData"></Table>
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
-        <span class="header_text">基础信息</span>
-        <FormItem label="产品名称" prop="name">
-          <Input v-model="formValidate.name" placeholder="请输入产品名称" clearable></Input>
-        </FormItem>
-        <FormItem label="所属分类">
-          <Cascader :data="eq_kind" v-model="formValidate.kind" placeholder="请选择所属分类" filterable trigger="hover"></Cascader>
+        <span class="header_text">请选择设备运营商类型</span>
+        <FormItem label="" prop="eq_kind_sel" class="check_my">
+          <RadioGroup v-model="formValidate.eq_kind_sel" @on-change='check_eq_kind'>
+            <Radio label="CMCC">
+              <div class="check_kind" :class="formValidate.eq_kind_sel == 'CMCC'? 'active' : ''">
+                <img src="../../../assets/images/yidonglogo.png" alt="" class="logo">
+                <span class="name">中国移动</span>
+                <div class="describe">describe</div>
+              </div>
+            </Radio>
+            <Radio label="CT">
+              <div class="check_kind" :class="formValidate.eq_kind_sel == 'CT'? 'active' : ''">
+                <img src="../../../assets/images/zhongguodianxin.png" alt="" class="logo">
+                <span class="name">中国电信</span>
+                <div class="describe">describe</div>
+              </div>
+            </Radio>
+          </RadioGroup>
         </FormItem>
         <span class="header_text">其他信息</span>
-        <FormItem label="节点类型" prop="node_kind">
-          <RadioGroup v-model="formValidate.node_kind">
-            <Radio label="male">设备</Radio>
-            <Radio label="female">网关</Radio>
-          </RadioGroup>
+        <FormItem label="所属产品" prop="product">
+          <Select clearable v-model="formValidate.product" placeholder="请选择设备所归属的产品">
+            <Option v-for="item in eq_kind" :value='item.value' :key="item.value">{{item.label}}</Option>
+          </Select>
         </FormItem>
-        <FormItem label="是否接入网关" prop="gateway" label-position='right'>
-          <RadioGroup v-model="formValidate.gateway">
-            <Radio label="male">是</Radio>
-            <Radio label="female">否</Radio>
-          </RadioGroup>
+        <FormItem label="IMEI" prop="imei">
+          <Input v-model="formValidate.imei" placeholder="请输入设备IMEI号" clearable></Input>
         </FormItem>
-        <FormItem label="联网协议" prop="agreement">
-            <Select v-model="formValidate.agreement" placeholder="请选择联网协议">
-                <Option value="CoAP">CoAP</Option>
-                <Option value="WIFI">WIFI</Option>
-                <Option value="cellular">蜂窝(2G/3G/4G)</Option>
-                <Option value="etheric">以太网</Option>
-                <Option value="LoRAWAN">LoRAWAN</Option>
-                <Option value="other">其他</Option>
-            </Select>
+        <FormItem label="IMSI" prop="imsi" v-if="formValidate.eq_kind_sel == 'CMCC'">
+          <Input v-model="formValidate.imsi" placeholder="请输入设备IMSI号" clearable></Input>
         </FormItem>
-        <FormItem label="数据格式" prop="format">
-            <Select v-model="formValidate.format" placeholder="请选择数据格式">
-                <Option value="ICA">ICA标准数据格式(Alink JSON)</Option>
-                <Option value="custom">遗传/自定义</Option>
-            </Select>
-        </FormItem>
-        <FormItem label="产品描述" prop="desc">
-          <Input v-model="formValidate.desc" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入产品描述..."></Input>
+        <FormItem label="产品名称">
+          <Input v-model="formValidate.name" placeholder="请输入产品名称" clearable></Input>
         </FormItem>
         <FormItem>
           <Button type="primary" @click="handleSubmit('formValidate')">提交</Button>
@@ -75,99 +70,88 @@
     </Card>
     <Card v-if="!is_detail_show" class="detail_card">
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close_detail"/>
-      <div class="header">嵊州地磁</div>
+      <div class="header">{{sel.name}}</div>
       <div class="middle">
-        <span style="margin-right:50px">产品ID：{{sel.name}}</span>
-        <span>设备数量：{{sel.num}}&nbsp;&nbsp;<Icon type="md-eye" size='24'/></span>
+        <span style="margin-right:50px">归属产品：{{sel.name}}&nbsp;&nbsp;<Icon type="md-eye" size='24'/></span>
       </div>
       <div class="down">
-        <span class="detail_text">产品信息</span>
-        <Button class="edit" type="info" @click="handleeditor">编辑</Button>
-        <Row class='detail'>
-          <Col span="8">
-            <Col class='left detail_list' span="12">产品名称</Col>
-            <Col class="detail_list" span="12">{{sel.name}}</Col>
-          </Col>
-          <Col span="8">
-            <Col class='left detail_list' span="12">所属分类</Col>
-            <Col class="detail_list" span="12">{{sel.kind[0]}}>{{sel.kind[1]}}</Col>
-          </Col>
-          <Col span="8">
-            <Col class='left detail_list' span="12">创建时间</Col>
-            <Col class="right detail_list" span="12">{{sel.time}}</Col>
-          </Col>
-          <Col span="8">
-            <Col class='left detail_list' span="12">节点类型</Col>
-            <Col class="detail_list" span="12">{{sel.node_kind}}</Col>
-          </Col>
-          <Col span="16">
-            <Col class='left detail_list' span="6">数据格式</Col>
-            <Col v-if="sel.format == 'ICA'" class="right detail_list" span="18">ICA标准数据格式(Alink JSON)</Col>
-            <Col v-if="sel.format == 'custom'" class="right detail_list" span="18">遗传/自定义</Col>
-          </Col>
-          <Col span="8">
-            <Col class='left detail_list' span="12">状态</Col>
-            <Col class="detail_list" span="12">{{sel.status}}</Col>
-          </Col>
-          <Col span="8">
-            <Col class='left detail_list' span="12">是否接入网关</Col>
-            <Col class="detail_list" span="12">{{sel.gateway}}</Col>
-          </Col>
-          <Col span="8">
-            <Col class='left detail_list' span="12">联网协议</Col>
-            <Col class="right detail_list" span="12">{{sel.agreement}}</Col>
-          </Col>
-          <Col span="24">
-            <Col class='left detail_list last' span="4">产品描述</Col>
-            <Col class="right detail_list last" span="20">{{sel.desc}}</Col>
-          </Col>
-        </Row>
+        <Tabs type="card" @on-click="get_eq_data">
+            <TabPane label="设备信息">
+              <Button class="edit" type="info" @click="handleeditor">编辑</Button>
+              <Row class='detail'>
+                <Col span="8">
+                  <Col class='left detail_list last' span="12">设备名称</Col>
+                  <Col class="detail_list last" span="12">{{sel.name}}</Col>
+                </Col>
+                <Col span="8">
+                  <Col class='left detail_list last' span="12">归属产品</Col>
+                  <Col class="detail_list last" span="12">{{sel.product}}</Col>
+                </Col>
+                <Col span="8">
+                  <Col class='left detail_list last' span="12">添加时间</Col>
+                  <Col class="right detail_list last" span="12">{{sel.time}}</Col>
+                </Col>
+                <Col span="8">
+                  <Col class='left detail_list' span="12">归属运营商</Col>
+                  <Col v-if="sel.eq_kind_sel == 'CMCC'" class="detail_list" span="12">中国移动</Col>
+                  <Col v-if="sel.eq_kind_sel == 'CT'" class="detail_list" span="12">中国电信</Col>
+                </Col>
+                <Col span="8">
+                  <Col class='left detail_list' span="12">状态</Col>
+                  <Col v-if="sel.format == 'online'" class="detail_list" span="12"><Icon style="color:#1afa29" type="md-information-circle" />在线</Col>
+                  <Col v-if="sel.format == 'offline'" class="detail_list" span="12"><Icon style="color:#d81e06" type="md-information-circle" />离线</Col>
+                </Col>
+                <Col span="8">
+                  <Col class='left detail_list' span="12">最近更改时间</Col>
+                  <Col class="right detail_list" span="12">{{sel.up_time}}</Col>
+                </Col>
+                <Col span="8">
+                  <Col class='left detail_list' span="12">IMEI</Col>
+                  <Col class="detail_list" span="12">{{sel.imei}}</Col>
+                </Col>
+                <Col span="16">
+                  <Col class='left detail_list' span="8">DeviceID</Col>
+                  <Col class="right detail_list" span="16">{{sel.deviceId}}</Col>
+                </Col>
+                <Col span="24" v-if="sel.imsi">
+                  <Col class='left detail_list' span="4">IMSI</Col>
+                  <Col class="right detail_list" span="20">{{sel.imsi}}</Col>
+                </Col>
+              </Row>
+            </TabPane>
+            <TabPane label="设备数据">
+              <div class="eq_data">
+                <DatePicker value='yyyy年MM月dd日' v-model="time_interval" split-panels class="time_inta" type="daterange" placement="bottom-start" placeholder="请选择时间范围" style="width: 200px"></DatePicker>
+                <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
+                <Button @click="handleExport_eq" class="export-btn" type="info">&nbsp;导出&nbsp;</Button>
+              </div>
+              <div>
+                <Table border :columns="detail_columns" :data="tableData"></Table>
+                <Page :total="total_ps" size="small" transfer show-total show-elevator show-sizer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
+              </div>
+            </TabPane>
+        </Tabs>
       </div>
     </Card>
     <Modal
-      title="手机验证"
-      v-model="is_auth_code"
-      :closable="false"
-      :mask-closable="false"
-      footer-hide
-      @on-ok='submitCode'
-      @on-cancel='cancelCode'
-      class-name="vertical-center-modal">
-      <Form ref="auth_code" :model="auth_code" :rules="code_rule" :label-width="100">
-        <FormItem label="您绑定的手机">
-          <span>134****1234</span>
-        </FormItem>
-        <FormItem label="验证码" prop="code">
-          <Input type="text" style='width:200px' v-model="auth_code.code" placeholder="请输入验证码"></Input>
-          <Button class="get_code" :disabled='!is_overdue' @click="get_code" type="info">{{code_text}}</Button>
-        </FormItem>
-        <FormItem>
-          <Button class="code_btn" style="margin-left: 50px" type="primary" @click="submitCode('auth_code')">提交</Button>
-          <Button class="code_btn" @click="cancelCode">取消</Button>
-        </FormItem>
-      </Form>
-    </Modal>
-    <Modal
       title="上传文件"
       v-model="is_batch_show"
-      :closable="false"
       :mask-closable="false"
       footer-hide
-      @on-ok='submitFile'
-      @on-cancel='cancelFile'
       class-name="vertical-center-modal">
       <div class="main_con">
         <div class="left">选择文件</div>
         <div class="right">
-          <span class="right_text" id="excel_name">点击选择</span>
-          <input type="file" name="eq_files" id="files"
+          <span class="right_text" id="excel_name">{{file_name}}</span>
+          <input type="file" name="eq_files" id="files" @change="sel_file"
             accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         </div>
       </div>
-      <div class="layui-form-item" style="margin-top: 10px">
-        <div class="layui-input-block">
-          <button class="layui-btn" id="eq_updata" style="margin-right: 80px">立即提交</button>
-          <button type="reset" id="eq_reset" class="layui-btn layui-btn-primary">重置</button>
+      <div style="margin-top: 10px">
+        <div>
+          <Button @click="get_template" type="info">下载模版</Button>
+          <Button @click="submitFile" class="batch_submit" type="primary">立即提交</Button>
+          <Button @click="cancelFile" class="batch_reset" type="warning">重置</Button>
         </div>
       </div>
     </Modal>
@@ -176,28 +160,12 @@
 
 <script>
 // import Tables from '_c/tables'
-import './index.less'
+import './equipmentList.less'
 import { getTableData } from '@/api/data'
 export default {
   name: 'tables_page',
 
   data () {
-    const validatecode = (rule, value, callback) => {
-      if (!value) {
-        return callback(new Error('验证码不能为空'))
-      }
-      setTimeout(() => {
-        if (!Number.isInteger((value * 1))) {
-          callback(new Error('验证码为数字'))
-        } else {
-          if ((value + '').length !== 6) {
-            callback(new Error('验证码长度为6位'))
-          } else {
-            callback()
-          }
-        }
-      }, 500)
-    }
     return {
       sel_product: '',
       productList: [
@@ -215,11 +183,13 @@ export default {
       eq_online: 900,
       eq_offline: 100,
       columns: [
-        { title: '产品名称', key: 'name', sortable: false },
-        { title: '产品ID', key: 'email', editable: true },
-        { title: '节点类型', key: 'email', editable: true },
-        { title: '设备数', key: 'email', editable: true },
-        { title: '创建时间', key: 'createTime' },
+        { type: 'selection', width: 60, align: 'center' },
+        { title: '设备名称', key: 'name' },
+        { title: 'IMEI', key: 'name' },
+        { title: '运营商', key: 'email' },
+        { title: '归属产品', key: 'email' },
+        { title: '设备状态', key: 'email' },
+        { title: '添加时间', key: 'createTime' },
         {
           title: '操作',
           key: 'handle',
@@ -239,20 +209,31 @@ export default {
                   }
                 }
               }, '查看'),
-              h('Button', {
+              h('Poptip', {
                 props: {
-                  type: 'error',
-                  size: 'small'
+                  confirm: true,
+                  title: '你确定要删除吗?',
+                  transfer: true
                 },
                 style: {
                   marginRight: '5px'
                 },
                 on: {
-                  click: () => {
+                  'on-ok': () => {
                     this.remove(params.index)
                   }
                 }
-              }, '删除')
+              }, [
+                h('Button', {
+                  props: {
+                    type: 'error',
+                    size: 'small'
+                  },
+                  style: {
+                    marginRight: '5px'
+                  }
+                }, '删除')
+              ])
             ])
           }
         }
@@ -267,120 +248,64 @@ export default {
       ps: 10,
       formValidate: {
         name: '',
-        kind: [],
-        node_kind: '',
-        gateway: '',
-        desc: '',
-        agreement: '',
-        format: ''
+        imei: '',
+        imsi: '',
+        eq_kind_sel: '',
+        product: ''
       },
+      sel_delete: [],
       ruleValidate: {
-        name: [
-          { required: true, message: '产品名称为必填项', trigger: 'blur' }
+        imei: [
+          { required: true, message: '设备IMEI号是必填选项', trigger: 'blur' }
         ],
-        kind: [
-          { required: true, message: '请选择产品所属分类', trigger: '' }
+        imsi: [
+          { required: true, message: '移动设备的IMSI号是必填选项', trigger: 'blur' }
         ],
-        node_kind: [
-          { required: true, message: '请选择产品节点类型', trigger: 'change' }
+        eq_kind_sel: [
+          { required: true, message: '请选择设备的运营商类型', trigger: 'change' }
         ],
-        gateway: [
-          { required: true, message: '请选择产品是否接入网关', trigger: 'change' }
-        ],
-        agreement: [
-          { required: true, message: '请选择产品联网协议', trigger: 'blur' }
-        ],
-        format: [
-          { required: true, message: '请选择产品数据格式', trigger: 'blur' }
+        product: [
+          { required: true, message: '请选择设备所归属的产品', trigger: 'change' }
         ]
       },
       eq_kind: [
         {
-          value: '智慧城市',
-          label: '智慧城市',
-          children: [
-            {
-              value: '公共服务',
-              label: '公共服务',
-              children: [
-                {
-                  value: '定位器',
-                  label: '定位器'
-                },
-                {
-                  value: '地磁检测器',
-                  label: '地磁检测器'
-                },
-                {
-                  value: '智能井盖',
-                  label: '智能井盖'
-                },
-                {
-                  value: '井盖锁',
-                  label: '井盖锁'
-                },
-                {
-                  value: '垃圾箱',
-                  label: '垃圾箱'
-                },
-                {
-                  value: '绿灯照明',
-                  label: '绿灯照明'
-                }
-              ]
-            },
-            {
-              value: '消防安全',
-              label: '消防安全'
-            },
-            {
-              value: '智能楼宇',
-              label: '智能楼宇'
-            }
-          ]
+          value: '地磁',
+          label: '地磁'
         },
         {
-          value: '智慧生活',
-          label: '智慧生活'
+          value: '定位器',
+          label: '定位器'
         },
         {
-          value: '智慧园区',
-          label: '智慧园区'
+          value: '井盖',
+          label: '井盖'
+        },
+        {
+          value: '地锁',
+          label: '地锁'
         }
       ],
+      eq_kind_sel: 'CMCC',
       sel: {
-        name: '嵊州地磁',
-        kind: ['智慧城市', '公共服务', '地磁检测器'],
-        node_kind: '设备',
-        gateway: '是',
-        desc: '123',
-        agreement: 'CoAP',
-        format: 'ICA',
+        name: '无名路地磁1',
+        imei: '123456789',
+        imsi: '123456789',
+        eq_kind_sel: 'CMCC',
+        product: '地磁',
         time: '2019-07-23',
-        status: '开发中',
-        num: 1000
+        format: 'online',
+        up_time: '2019-07-24',
+        deviceId: 'e1f4afde-be26-4887-91d2-018d83733c9d'
       },
-      is_auth_code: false,
-      auth_code: {
-        code: ''
-      },
-      code_rule: {
-        code: [
-          { validator: validatecode, trigger: 'blur' }
-        ]
-      },
-      code_text: '点击获取',
-      is_overdue: true,
-      code_time: null,
+      time_interval: '',
+      detail_columns: [
+        { title: '时间', key: 'createTime' },
+        { title: '信息', key: 'email' }
+      ],
       is_batch_show: false,
-      batch_file: {
-        file: ''
-      },
-      file_rule: {
-        file: [
-          { required: true, message: '请选择文件', trigger: 'blur' }
-        ]
-      }
+      file_name: '点击选择',
+      batch_file: ''
     }
   },
   methods: {
@@ -395,16 +320,37 @@ export default {
     handleSearch () {
       console.log('搜索')
     },
+    table_sel (val) {
+      console.log(val)
+      this.sel_delete = val
+    },
     handleAdd () {
       this.is_add_show = false
       this.formValidate = {
         name: '',
-        kind: [],
-        node_kind: '',
-        gateway: '',
-        desc: '',
-        agreement: '',
-        format: ''
+        imei: '',
+        imsi: '',
+        eq_kind_sel: '',
+        product: ''
+      }
+    },
+    handleDel () {
+      if (this.sel_delete.length > 0) {
+        this.$Modal.confirm({
+          title: '温馨提示',
+          content: '确定要删除选中的设备吗？',
+          onOk: () => {
+            this.$Message.success({
+              content: '所选设备删除成功！',
+              top: 100
+            })
+          },
+          onCancel: () => {
+            this.$Message.info('Clicked cancel')
+          }
+        })
+      } else {
+        this.$Message.error('没有选择任何设备！')
       }
     },
     handleBatch () {
@@ -422,7 +368,10 @@ export default {
         title: '温馨提示',
         content: '确定要删除该产品吗？',
         onOk: () => {
-          this.is_auth_code = true
+          this.$Message.success({
+            content: '设备删除成功！',
+            top: 100
+          })
         },
         onCancel: () => {
           this.$Message.info('Clicked cancel')
@@ -433,6 +382,9 @@ export default {
       console.log(val)
     },
     handlepagesize (val) {
+      console.log(val)
+    },
+    check_eq_kind (val) {
       console.log(val)
     },
     close () {
@@ -466,8 +418,8 @@ export default {
             })
           }
         } else {
-          this.$Message.success({
-            content: '添加产品成功！',
+          this.$Message.error({
+            content: '必填选项不能为空！',
             top: 100
           })
         }
@@ -482,51 +434,45 @@ export default {
       this.is_editor = true
       this.formValidate = this.sel
     },
-    get_code () {
-      clearInterval(this.code_time)
-      let num = 60
-      this.code_text = num + '秒后过期'
-      this.is_overdue = false
-      this.code_time = setInterval(() => {
-        if (num > 0) {
-          num--
-          this.code_text = num + '秒后过期'
-        } else {
-          this.code_text = '重新获取'
-          this.is_overdue = true
-        }
-      }, 1000)
+    get_eq_data (val) {
+      if (val === 1) {
+        console.log('获取设备数据')
+      }
     },
-    submitCode (val) {
-      clearInterval(this.code_time)
-      this.$refs[val].validate((valid) => {
-        console.log(valid)
-        if (valid) {
-          this.code_text = '点击获取'
-          this.is_auth_code = false
-          this.$Message.success({
-            content: '删除产品成功！',
-            top: 100
-          })
-        } else {
-          this.is_auth_code = true
-          this.$Message.error('验证码不能为空')
-        }
-      })
+    handleSearch_eq () {
+      console.log(this.time_interval)
     },
-    cancelCode () {
-      clearInterval(this.code_time)
-      this.is_auth_code = false
-      this.code_text = '点击获取'
+    handleExport_eq () {
+      console.log('导出')
+    },
+    handlepage_eq (val) {
+      console.log(val)
+    },
+    handlepagesize_eq (val) {
+      console.log(val)
+    },
+    sel_file (e) {
+      console.log(e)
+      this.batch_file = e.target.value
+      this.file_name = e.target.files[0].name
     },
     get_template () {
       console.log('模版')
     },
     submitFile () {
-
+      if (this.batch_file) {
+        this.is_batch_show = false
+        this.$Message.success({
+          content: '批量导入设备成功！',
+          top: 100
+        })
+      } else {
+        this.$Message.error('请选择文件')
+      }
     },
     cancelFile () {
-
+      this.file_name = '点击选择'
+      this.batch_file = ''
     }
   },
   mounted () {
