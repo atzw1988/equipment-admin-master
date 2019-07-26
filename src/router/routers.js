@@ -208,6 +208,15 @@ export default [
     component: Main,
     children: [
       {
+        path: 'organization_page',
+        name: 'organization_page',
+        meta: {
+          icon: 'md-git-merge',
+          title: '组织机构'
+        },
+        component: () => import('@/view/permissions/organization/organization.vue')
+      },
+      {
         path: 'rolemana_page',
         name: 'rolemana_page',
         meta: {
