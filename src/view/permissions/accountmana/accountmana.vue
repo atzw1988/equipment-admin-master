@@ -1,7 +1,7 @@
 <template>
   <div>
     <Card v-if="is_add_show && is_detail_show">
-      <span>角色管理</span>
+      <span>账户管理</span>
       <div class="search-con search-con-top">
         <Input clearable placeholder="输入角色名关键字搜索" class="search-input" v-model="searchValue"/>
         <Button @click="handleSearch" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
