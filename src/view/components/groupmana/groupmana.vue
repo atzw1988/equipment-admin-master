@@ -6,13 +6,12 @@
         <Input clearable placeholder="输入关键字搜索" class="search-input" v-model="searchValue"/>
         <Button @click="handleSearch" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
         <Button @click="handleAdd" class="add-btn" type="success"><Icon type="search"/>&nbsp;创建分组&nbsp;</Button>
-        <Button @click="handleBatch" class="add-btn" type="info"><Icon type="search"/>&nbsp;批量添加&nbsp;</Button>
-        <Button @click="handleDel" class="add-btn" type="error"><Icon type="search"/>&nbsp;删除设备&nbsp;</Button>
       </div>
       <Table border :columns="columns" :data="tableData"></Table>
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
+      <div class="header">{{text_header}}</div>
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
         <FormItem label="分组名称" prop="name">
@@ -39,53 +38,56 @@
       </div>
       <div class="down">
         <Tabs type="card" @on-click="get_eq_data">
-            <TabPane label="分组信息">
-              <Button class="edit" type="info" @click="handleeditor">编辑</Button>
-              <Row class='detail'>
-                <Col span="8">
-                  <Col class='left detail_list last' span="12">分组名称</Col>
-                  <Col class="detail_list last" span="12">{{sel.name}}</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list last' span="12">分组ID</Col>
-                  <Col class="detail_list last" span="12">{{sel.group_id}}</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list last' span="12">添加时间</Col>
-                  <Col class="right detail_list last" span="12">{{sel.time}}</Col>
-                </Col>
-                <Col span="24">
-                  <Col class='left detail_list' span="4">分组描述</Col>
-                  <Col class="detail_list right" span="20">{{sel.desc}}</Col>
-                </Col>
-              </Row>
-            </TabPane>
-            <TabPane label="设备列表">
-              <div class="eq_data">
-                <Input class="sel-function" v-model="sel_eq_name" placeholder="可输入设备名称关键字" clearable style="width: 150px" />&nbsp;
-                <Input class="sel-function" v-model="sel_eq_imei" placeholder="可输入设备IMEI关键字" clearable style="width: 150px" />&nbsp;
-                <Select class="sel-function" v-model="sel_eq_operator" clearable style="width:100px" placeholder="全部运营商">
-                  <Option v-for="item in operatorList" :value="item.value" :key="item.value">{{ item.label }}</Option>
-                </Select>&nbsp;
-                <Select class="sel-function" v-model="sel_eq_product" clearable style="width:100px" placeholder="全部产品">
-                  <Option v-for="item in productList" :value="item.value" :key="item.value">{{ item.label }}</Option>
-                </Select>&nbsp;
-                <Select class="sel-function" v-model="sel_eq_status" clearable style="width:100px" placeholder="全部状态">
-                  <Option value="online">在线</Option>
-                  <Option value="offline">离线</Option>
-                </Select>&nbsp;
-                <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
-                <Button @click="handleExport_eq" class="export-btn" type="warning">移除</Button>
-                <Button @click="handleExport_eq" class="export-btn" type="success">添加设备</Button>
-              </div>
-              <div>
-                <Table  @on-selection-change='table_sel' border :columns="detail_columns" :data="tableData"></Table>
-                <Page :total="40" size="small" show-total show-elevator show-sizer transfer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
-              </div>
-            </TabPane>
+          <TabPane label="分组信息">
+            <Button class="edit" type="info" @click="handleeditor">编辑</Button>
+            <Row class='detail'>
+              <Col span="8">
+                <Col class='left detail_list last' span="12">分组名称</Col>
+                <Col class="detail_list last" span="12">{{sel.name}}</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list last' span="12">分组ID</Col>
+                <Col class="detail_list last" span="12">{{sel.group_id}}</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list last' span="12">添加时间</Col>
+                <Col class="right detail_list last" span="12">{{sel.time}}</Col>
+              </Col>
+              <Col span="24">
+                <Col class='left detail_list' span="4">分组描述</Col>
+                <Col class="detail_list right" span="20">{{sel.desc}}</Col>
+              </Col>
+            </Row>
+          </TabPane>
+          <TabPane label="设备列表">
+            <div class="eq_data">
+              <Input class="sel-function" v-model="sel_eq_name" placeholder="可输入设备名称关键字" clearable style="width: 150px" />&nbsp;
+              <Input class="sel-function" v-model="sel_eq_imei" placeholder="可输入设备IMEI关键字" clearable style="width: 150px" />&nbsp;
+              <Select class="sel-function" v-model="sel_eq_operator" clearable style="width:100px" placeholder="全部运营商">
+                <Option v-for="item in operatorList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+              </Select>&nbsp;
+              <Select class="sel-function" v-model="sel_eq_product" clearable style="width:100px" placeholder="全部产品">
+                <Option v-for="item in productList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+              </Select>&nbsp;
+              <Select class="sel-function" v-model="sel_eq_status" clearable style="width:100px" placeholder="全部状态">
+                <Option value="online">在线</Option>
+                <Option value="offline">离线</Option>
+              </Select>&nbsp;
+              <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
+              <Button @click="handleDel_eq" class="export-btn" type="warning">移除</Button>
+              <Button @click="handleAdd_eq" class="export-btn" type="success">添加设备</Button>
+            </div>
+            <div>
+              <Table  @on-selection-change='table_sel' border :columns="detail_columns" :data="tableData"></Table>
+              <Page :total="40" size="small" show-total show-elevator show-sizer transfer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
+            </div>
+          </TabPane>
         </Tabs>
       </div>
     </Card>
+    <Drawer width='640' title="Basic Drawer" :mask-closable="false" v-model="is_drawer_show">
+
+    </Drawer>
   </div>
 </template>
 
@@ -166,9 +168,11 @@ export default {
           }
         }
       ],
+      text_header: '',
       is_add_show: true,
       is_detail_show: true,
       is_editor: false,
+      is_drawer_show: false,
       tableData: [],
       searchValue: '',
       total_ps: 40,
@@ -283,73 +287,42 @@ export default {
         filename: `table-${(new Date()).valueOf()}.csv`
       })
     },
+    // 分组搜索
     handleSearch () {
       console.log('搜索')
     },
-    table_sel (val) {
-      console.log(val)
-      this.sel_delete = val
-    },
+    // 新建分组
     handleAdd () {
+      this.text_header = '新建分组'
       this.is_add_show = false
       this.formValidate = {
         name: '',
         desc: ''
       }
     },
-    handleDel () {
-      if (this.sel_delete.length > 0) {
-        this.$Modal.confirm({
-          title: '温馨提示',
-          content: '确定要删除选中的设备吗？',
-          onOk: () => {
-            this.$Message.success({
-              content: '所选设备删除成功！',
-              top: 100
-            })
-          },
-          onCancel: () => {
-            this.$Message.info('Clicked cancel')
-          }
-        })
-      } else {
-        this.$Message.error('没有选择任何设备！')
-      }
-    },
-    handleBatch () {
-      console.log(1)
-      this.is_batch_show = true
-    },
+    // 查看分组详情
     show (index) {
       console.log(index)
       this.is_detail_show = false
       this.is_editor = true
     },
+    // 表格内删除
     remove (index) {
       console.log(index)
-      this.$Modal.confirm({
-        title: '温馨提示',
-        content: '是否删除该分组，删除后无法撤销！',
-        onOk: () => {
-          this.$Message.success({
-            content: '设备删除成功！',
-            top: 100
-          })
-        },
-        onCancel: () => {
-          this.$Message.info('Clicked cancel')
-        }
+      this.$Message.success({
+        content: '设备删除成功！',
+        top: 100
       })
     },
+    // 换页
     handlepage (val) {
       console.log(val)
     },
+    // 切换每页条数
     handlepagesize (val) {
       console.log(val)
     },
-    check_eq_kind (val) {
-      console.log(val)
-    },
+    // 关闭新建、编辑页面
     close () {
       console.log(this.is_editor)
       if (this.is_editor) {
@@ -360,10 +333,12 @@ export default {
         this.is_detail_show = true
       }
     },
+    // 关闭分组详情页面
     close_detail () {
       this.is_detail_show = true
       this.is_editor = false
     },
+    // 新建、编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
         console.log(valid)
@@ -388,23 +363,41 @@ export default {
         }
       })
     },
+    // 新建、编辑表单重置
     handleReset (name) {
       this.$refs[name].resetFields()
     },
+    // 编辑分组
     handleeditor () {
+      this.text_header = '编辑分组'
       this.is_add_show = false
       this.is_detail_show = true
       this.is_editor = true
       this.formValidate = this.sel
     },
+    // 切换设备裂变页面
     get_eq_data (val) {
       if (val === 1) {
         console.log('获取设备数据')
       }
     },
+    // 批量移除设备
+    handleDel_eq () {
+
+    },
+    // 设备列表添加设备
+    handleAdd_eq () {
+      this.is_drawer_show = true
+    },
+    // 表格内选择
+    table_sel (val) {
+      console.log(val)
+    },
+    // 查看设备详情
     show_eq (index) {
       console.log(index)
     },
+    // 设备列表表格内移出
     remove_eq (index) {
       console.log(index)
       this.$Modal.confirm({
@@ -421,15 +414,15 @@ export default {
         }
       })
     },
+    // 设备列表搜索
     handleSearch_eq () {
       console.log(this.time_interval)
     },
-    handleExport_eq () {
-      console.log('导出')
-    },
+    // 设备列表换页
     handlepage_eq (val) {
       console.log(val)
     },
+    // 设备列表切换每页条数
     handlepagesize_eq (val) {
       console.log(val)
     }

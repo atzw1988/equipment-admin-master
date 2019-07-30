@@ -12,6 +12,7 @@
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
+      <div class="header">{{text_header}}</div>
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
         <span class="header_text">基础信息</span>
@@ -215,6 +216,7 @@ export default {
           }
         }
       ],
+      text_header: '',
       is_add_show: true,
       is_detail_show: true,
       is_editor: false,
@@ -341,10 +343,13 @@ export default {
         filename: `table-${(new Date()).valueOf()}.csv`
       })
     },
+    // 搜索
     handleSearch () {
       console.log('搜索')
     },
+    // 新建按钮
     handleAdd () {
+      this.text_header = '新建产品'
       this.is_add_show = false
       this.formValidate = {
         name: '',
@@ -356,30 +361,26 @@ export default {
         format: ''
       }
     },
+    // 查看功能
     show (index) {
       console.log(index)
       this.is_detail_show = false
       this.is_editor = true
     },
+    // 表格内删除
     remove (index) {
       console.log(index)
-      this.$Modal.confirm({
-        title: '温馨提示',
-        content: '确定要删除该产品吗？',
-        onOk: () => {
-          this.is_auth_code = true
-        },
-        onCancel: () => {
-          this.$Message.info('Clicked cancel')
-        }
-      })
+      this.is_auth_code = true
     },
+    // 换页
     handlepage (val) {
       console.log(val)
     },
+    // 修改每页条数
     handlepagesize (val) {
       console.log(val)
     },
+    // 关闭新建、编辑页面
     close () {
       console.log(this.is_editor)
       if (this.is_editor) {
@@ -390,10 +391,12 @@ export default {
         this.is_detail_show = true
       }
     },
+    // 关闭详情页面
     close_detail () {
       this.is_detail_show = true
       this.is_editor = false
     },
+    // 新建、编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
         console.log(valid)
@@ -418,15 +421,19 @@ export default {
         }
       })
     },
+    // 新建、编辑表单重置
     handleReset (name) {
       this.$refs[name].resetFields()
     },
+    // 编辑
     handleeditor () {
+      this.text_header = '编辑产品'
       this.is_add_show = false
       this.is_detail_show = true
       this.is_editor = true
       this.formValidate = this.sel
     },
+    // 获取验证码
     get_code () {
       clearInterval(this.code_time)
       let num = 60
@@ -442,6 +449,7 @@ export default {
         }
       }, 1000)
     },
+    // 提交验证码
     submitCode (val) {
       clearInterval(this.code_time)
       this.$refs[val].validate((valid) => {
@@ -459,6 +467,7 @@ export default {
         }
       })
     },
+    // 验证弹窗取消
     cancelCode () {
       clearInterval(this.code_time)
       this.is_auth_code = false

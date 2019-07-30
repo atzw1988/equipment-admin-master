@@ -26,6 +26,7 @@
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
+      <div class="header">{{text_header}}</div>
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
         <span class="header_text">请选择设备运营商类型</span>
@@ -76,60 +77,60 @@
       </div>
       <div class="down">
         <Tabs type="card" @on-click="get_eq_data">
-            <TabPane label="设备信息">
-              <Button class="edit" type="info" @click="handleeditor">编辑</Button>
-              <Row class='detail'>
-                <Col span="8">
-                  <Col class='left detail_list last' span="12">设备名称</Col>
-                  <Col class="detail_list last" span="12">{{sel.name}}</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list last' span="12">归属产品</Col>
-                  <Col class="detail_list last" span="12">{{sel.product}}</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list last' span="12">添加时间</Col>
-                  <Col class="right detail_list last" span="12">{{sel.time}}</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list' span="12">归属运营商</Col>
-                  <Col v-if="sel.eq_kind_sel == 'CMCC'" class="detail_list" span="12">中国移动</Col>
-                  <Col v-if="sel.eq_kind_sel == 'CT'" class="detail_list" span="12">中国电信</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list' span="12">状态</Col>
-                  <Col v-if="sel.format == 'online'" class="detail_list" span="12"><Icon style="color:#1afa29" type="md-information-circle" />在线</Col>
-                  <Col v-if="sel.format == 'offline'" class="detail_list" span="12"><Icon style="color:#d81e06" type="md-information-circle" />离线</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list' span="12">最近更改时间</Col>
-                  <Col class="right detail_list" span="12">{{sel.up_time}}</Col>
-                </Col>
-                <Col span="8">
-                  <Col class='left detail_list' span="12">IMEI</Col>
-                  <Col class="detail_list" span="12">{{sel.imei}}</Col>
-                </Col>
-                <Col span="16">
-                  <Col class='left detail_list' span="8">DeviceID</Col>
-                  <Col class="right detail_list" span="16">{{sel.deviceId}}</Col>
-                </Col>
-                <Col span="24" v-if="sel.imsi">
-                  <Col class='left detail_list' span="4">IMSI</Col>
-                  <Col class="right detail_list" span="20">{{sel.imsi}}</Col>
-                </Col>
-              </Row>
-            </TabPane>
-            <TabPane label="设备数据">
-              <div class="eq_data">
-                <DatePicker value='yyyy年MM月dd日' v-model="time_interval" split-panels class="time_inta" type="daterange" placement="bottom-start" placeholder="请选择时间范围" style="width: 200px"></DatePicker>
-                <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
-                <Button @click="handleExport_eq" class="export-btn" type="info">&nbsp;导出&nbsp;</Button>
-              </div>
-              <div>
-                <Table border :columns="detail_columns" :data="tableData"></Table>
-                <Page :total="total_ps" size="small" transfer show-total show-elevator show-sizer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
-              </div>
-            </TabPane>
+          <TabPane label="设备信息">
+            <Button class="edit" type="info" @click="handleeditor">编辑</Button>
+            <Row class='detail'>
+              <Col span="8">
+                <Col class='left detail_list last' span="12">设备名称</Col>
+                <Col class="detail_list last" span="12">{{sel.name}}</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list last' span="12">归属产品</Col>
+                <Col class="detail_list last" span="12">{{sel.product}}</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list last' span="12">添加时间</Col>
+                <Col class="right detail_list last" span="12">{{sel.time}}</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list' span="12">归属运营商</Col>
+                <Col v-if="sel.eq_kind_sel == 'CMCC'" class="detail_list" span="12">中国移动</Col>
+                <Col v-if="sel.eq_kind_sel == 'CT'" class="detail_list" span="12">中国电信</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list' span="12">状态</Col>
+                <Col v-if="sel.format == 'online'" class="detail_list" span="12"><Icon style="color:#1afa29" type="md-information-circle" />在线</Col>
+                <Col v-if="sel.format == 'offline'" class="detail_list" span="12"><Icon style="color:#d81e06" type="md-information-circle" />离线</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list' span="12">最近更改时间</Col>
+                <Col class="right detail_list" span="12">{{sel.up_time}}</Col>
+              </Col>
+              <Col span="8">
+                <Col class='left detail_list' span="12">IMEI</Col>
+                <Col class="detail_list" span="12">{{sel.imei}}</Col>
+              </Col>
+              <Col span="16">
+                <Col class='left detail_list' span="8">DeviceID</Col>
+                <Col class="right detail_list" span="16">{{sel.deviceId}}</Col>
+              </Col>
+              <Col span="24" v-if="sel.imsi">
+                <Col class='left detail_list' span="4">IMSI</Col>
+                <Col class="right detail_list" span="20">{{sel.imsi}}</Col>
+              </Col>
+            </Row>
+          </TabPane>
+          <TabPane label="设备数据">
+            <div class="eq_data">
+              <DatePicker value='yyyy年MM月dd日' v-model="time_interval" split-panels class="time_inta" type="daterange" placement="bottom-start" placeholder="请选择时间范围" style="width: 200px"></DatePicker>
+              <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
+              <Button @click="handleExport_eq" class="export-btn" type="info">&nbsp;导出&nbsp;</Button>
+            </div>
+            <div>
+              <Table border :columns="detail_columns" :data="tableData"></Table>
+              <Page :total="total_ps" size="small" transfer show-total show-elevator show-sizer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
+            </div>
+          </TabPane>
         </Tabs>
       </div>
     </Card>
@@ -238,6 +239,7 @@ export default {
           }
         }
       ],
+      text_header: '',
       is_add_show: true,
       is_detail_show: true,
       is_editor: false,
@@ -317,14 +319,18 @@ export default {
         filename: `table-${(new Date()).valueOf()}.csv`
       })
     },
+    // 搜索
     handleSearch () {
       console.log('搜索')
     },
+    // 表单内选择
     table_sel (val) {
       console.log(val)
       this.sel_delete = val
     },
+    // 添加设备
     handleAdd () {
+      this.text_header = '新建设备'
       this.is_add_show = false
       this.formValidate = {
         name: '',
@@ -334,6 +340,7 @@ export default {
         product: ''
       }
     },
+    // 批量删除
     handleDel () {
       if (this.sel_delete.length > 0) {
         this.$Modal.confirm({
@@ -353,40 +360,38 @@ export default {
         this.$Message.error('没有选择任何设备！')
       }
     },
+    // 批量添加
     handleBatch () {
       console.log(1)
       this.is_batch_show = true
     },
+    // 查看设备详情
     show (index) {
       console.log(index)
       this.is_detail_show = false
       this.is_editor = true
     },
+    // 表格内删除
     remove (index) {
       console.log(index)
-      this.$Modal.confirm({
-        title: '温馨提示',
-        content: '确定要删除该产品吗？',
-        onOk: () => {
-          this.$Message.success({
-            content: '设备删除成功！',
-            top: 100
-          })
-        },
-        onCancel: () => {
-          this.$Message.info('Clicked cancel')
-        }
+      this.$Message.success({
+        content: '设备删除成功！',
+        top: 100
       })
     },
+    // 换页
     handlepage (val) {
       console.log(val)
     },
+    // 改变每页条数
     handlepagesize (val) {
       console.log(val)
     },
+    // 监听设备选择运营商类型
     check_eq_kind (val) {
       console.log(val)
     },
+    // 关闭新建、编辑设备页面
     close () {
       console.log(this.is_editor)
       if (this.is_editor) {
@@ -397,10 +402,12 @@ export default {
         this.is_detail_show = true
       }
     },
+    // 关闭设备详情页面
     close_detail () {
       this.is_detail_show = true
       this.is_editor = false
     },
+    // 新建、编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
         console.log(valid)
@@ -425,40 +432,51 @@ export default {
         }
       })
     },
+    // 新建、编辑表单重置
     handleReset (name) {
       this.$refs[name].resetFields()
     },
+    // 编辑
     handleeditor () {
+      this.text_header = '编辑设备'
       this.is_add_show = false
       this.is_detail_show = true
       this.is_editor = true
       this.formValidate = this.sel
     },
+    // 监听标签切换
     get_eq_data (val) {
       if (val === 1) {
         console.log('获取设备数据')
       }
     },
+    // 设备数据时间搜索
     handleSearch_eq () {
       console.log(this.time_interval)
     },
+    // 设备数据导出
     handleExport_eq () {
       console.log('导出')
     },
+    // 设备数据换页
     handlepage_eq (val) {
       console.log(val)
     },
+    // 设备数据切换每页条数
     handlepagesize_eq (val) {
       console.log(val)
     },
+    // 批量导入选择文件
     sel_file (e) {
       console.log(e)
       this.batch_file = e.target.value
       this.file_name = e.target.files[0].name
     },
+    // 下载模板
     get_template () {
       console.log('模版')
     },
+    // 批量导入提交
     submitFile () {
       if (this.batch_file) {
         this.is_batch_show = false
@@ -470,6 +488,7 @@ export default {
         this.$Message.error('请选择文件')
       }
     },
+    // 批量导入取消
     cancelFile () {
       this.file_name = '点击选择'
       this.batch_file = ''

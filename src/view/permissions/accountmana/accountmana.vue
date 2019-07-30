@@ -11,6 +11,7 @@
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
+      <div class="header">{{text_header}}</div>
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
         <FormItem label="账号名称" prop="account">
@@ -188,6 +189,7 @@ export default {
       total_ps: 40,
       page_index: 1,
       ps: 10,
+      text_header: '',
       formValidate: {
         account: '',
         name: '',
@@ -245,11 +247,14 @@ export default {
         filename: `table-${(new Date()).valueOf()}.csv`
       })
     },
+    // 搜索
     handleSearch () {
       console.log('搜索')
     },
+    // 添加按钮
     handleAdd () {
       this.is_add_show = false
+      this.text_header = '新建账户'
       this.formValidate = {
         account: '',
         name: '',
@@ -260,27 +265,30 @@ export default {
         kind: 1
       }
     },
+    // 表格内账号启用开关
     switch_change (params, val) {
       console.log(params)
       console.log(val)
     },
+    // 查看
     show (index) {
       console.log(index)
       this.is_detail_show = false
       this.is_editor = true
     },
+    // 表格内删除
     remove (index) {
       console.log(index)
     },
+    // 换页
     handlepage (val) {
       console.log(val)
     },
+    // 每页条数切换
     handlepagesize (val) {
       console.log(val)
     },
-    check_eq_kind (val) {
-      console.log(val)
-    },
+    // 新建或者编辑页面关闭
     close () {
       console.log(this.is_editor)
       if (this.is_editor) {
@@ -291,10 +299,12 @@ export default {
         this.is_detail_show = true
       }
     },
+    // 关闭详情页面
     close_detail () {
       this.is_detail_show = true
       this.is_editor = false
     },
+    // 新建或者编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
         console.log(valid)
@@ -319,10 +329,13 @@ export default {
         }
       })
     },
+    // 新建、编辑表单重置
     handleReset (name) {
       this.$refs[name].resetFields()
     },
+    // 编辑按钮
     handleeditor () {
+      this.text_header = '编辑账户'
       this.is_add_show = false
       this.is_detail_show = true
       this.is_editor = true
