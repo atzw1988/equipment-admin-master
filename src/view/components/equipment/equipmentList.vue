@@ -99,8 +99,8 @@
               </Col>
               <Col span="8">
                 <Col class='left detail_list' span="12">状态</Col>
-                <Col v-if="sel.format == 'online'" class="detail_list" span="12"><Icon style="color:#1afa29" type="md-information-circle" />在线</Col>
-                <Col v-if="sel.format == 'offline'" class="detail_list" span="12"><Icon style="color:#d81e06" type="md-information-circle" />离线</Col>
+                <Col v-if="sel.format == 'online'" class="detail_list" span="12"><Badge status="success" />在线</Col>
+                <Col v-if="sel.format == 'offline'" class="detail_list" span="12"><Badge status="error" />离线</Col>
               </Col>
               <Col span="8">
                 <Col class='left detail_list' span="12">最近更改时间</Col>

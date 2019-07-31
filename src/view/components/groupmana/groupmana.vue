@@ -21,8 +21,10 @@
           <Input v-model="formValidate.desc" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入分组描述..."></Input>
         </FormItem>
         <FormItem>
-          <Button type="primary" @click="handleSubmit('formValidate')">提交</Button>
-          <Button @click="handleReset('formValidate')" style="margin-left: 8px">重置</Button>
+          <Affix :offset-bottom="50">
+            <Button type="primary" @click="handleSubmit('formValidate')">提交</Button>
+            <Button @click="handleReset('formValidate')" style="margin-left: 8px">重置</Button>
+          </Affix>
         </FormItem>
       </Form>
     </Card>
@@ -74,7 +76,7 @@
                 <Option value="offline">离线</Option>
               </Select>&nbsp;
               <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
-              <Button @click="handleDel_eq" class="export-btn" type="warning">移除</Button>
+              <Button @click="handleDel_eq" class="export-btn" type="error">移除</Button>
               <Button @click="handleAdd_eq" class="export-btn" type="success">添加设备</Button>
             </div>
             <div>
@@ -85,8 +87,27 @@
         </Tabs>
       </div>
     </Card>
-    <Drawer width='640' title="Basic Drawer" :mask-closable="false" v-model="is_drawer_show">
-
+    <Drawer width='800' title="添加设备" :mask-closable="false" v-model="is_drawer_show" class="add_content">
+      <Input class="sel-function" v-model="sel_eq_name" placeholder="可输入设备名称关键字" clearable style="width: 150px" />&nbsp;
+      <Select class="sel-function" v-model="sel_eq_operator" clearable style="width:100px" placeholder="全部运营商">
+        <Option v-for="item in operatorList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+      </Select>&nbsp;
+      <Select class="sel-function" v-model="sel_eq_product" clearable style="width:100px" placeholder="全部产品">
+        <Option v-for="item in productList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+      </Select>&nbsp;
+      <Select class="sel-function" v-model="sel_eq_status" clearable style="width:100px" placeholder="全部状态">
+        <Option value="online">在线</Option>
+        <Option value="offline">离线</Option>
+      </Select>&nbsp;
+      <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
+      <div style="margin-top:20px">
+        <Table  @on-selection-change='table_sel_add' border :columns="add_columns" :data="tableData"></Table>
+        <Page :total="40" size="small" show-total show-elevator show-sizer transfer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
+      </div>
+      <div class="add_eq_btn">
+        <Button @click="handleCancel">取消</Button>
+        <Button style="margin-left: 8px" type="primary" @click="handleSubmit_eq">确认添加</Button>
+      </div>
     </Drawer>
   </div>
 </template>
@@ -275,7 +296,16 @@ export default {
       ],
       is_batch_show: false,
       file_name: '点击选择',
-      batch_file: ''
+      batch_file: '',
+      add_columns: [
+        { type: 'selection', width: 60, align: 'center' },
+        { title: '设备名称', key: 'name' },
+        { title: 'IMEI', key: 'name' },
+        { title: '运营商', key: 'name' },
+        { title: '归属产品', key: 'name' },
+        { title: '设备状态', key: 'name' }
+      ],
+      sel_add_eq: []
     }
   },
   methods: {
@@ -383,7 +413,23 @@ export default {
     },
     // 批量移除设备
     handleDel_eq () {
-
+      if (this.sel_delete.length > 0) {
+        this.$Modal.confirm({
+          title: '温馨提示',
+          content: '确定要删除选中的设备吗？',
+          onOk: () => {
+            this.$Message.success({
+              content: '所选设备删除成功！',
+              top: 100
+            })
+          },
+          onCancel: () => {
+            this.$Message.info('Clicked cancel')
+          }
+        })
+      } else {
+        this.$Message.error('没有选择任何设备！')
+      }
     },
     // 设备列表添加设备
     handleAdd_eq () {
@@ -392,6 +438,7 @@ export default {
     // 表格内选择
     table_sel (val) {
       console.log(val)
+      this.sel_delete = val
     },
     // 查看设备详情
     show_eq (index) {
@@ -400,18 +447,9 @@ export default {
     // 设备列表表格内移出
     remove_eq (index) {
       console.log(index)
-      this.$Modal.confirm({
-        title: '温馨提示',
-        content: '确定要删除该产品吗？',
-        onOk: () => {
-          this.$Message.success({
-            content: '设备删除成功！',
-            top: 100
-          })
-        },
-        onCancel: () => {
-          this.$Message.info('Clicked cancel')
-        }
+      this.$Message.success({
+        content: '设备删除成功！',
+        top: 100
       })
     },
     // 设备列表搜索
@@ -425,6 +463,28 @@ export default {
     // 设备列表切换每页条数
     handlepagesize_eq (val) {
       console.log(val)
+    },
+    // 监听表格添加设备
+    table_sel_add (val) {
+      console.log(val)
+      this.sel_add_eq = val
+    },
+    // 确认添加设备
+    handleSubmit_eq () {
+      if (this.sel_add_eq.length > 0) {
+        this.$Message.success({
+          content: '设备添加成功！',
+          top: 100
+        })
+      } else {
+        this.$Notice.error({
+          title: '请先选择要添加的设备'
+        })
+      }
+    },
+    // 取消添加设备
+    handleCancel () {
+      this.is_drawer_show = false
     }
   },
   mounted () {
