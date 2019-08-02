@@ -29,10 +29,13 @@
     <FormItem>
       <Button @click="handleSubmit" type="primary" long>登录</Button>
     </FormItem>
+    <Checkbox v-model="is_remember">记住密码</Checkbox>
+    <span @click="find_my" class="login-tip">忘记密码?</span>
   </Form>
 </template>
 <script>
 import SIdentify from './verification-code'
+import { setCookie, getCookie, delCookie } from '@/libs/util'
 export default {
   name: 'LoginForm',
   components: { SIdentify },
@@ -65,7 +68,8 @@ export default {
         code: ''
       },
       identifyCodes: '1234567890ABCDEFGHJKLMNOPQRSTUVWXYZ',
-      identifyCode: ''
+      identifyCode: '',
+      is_remember: false
     }
   },
   computed: {
@@ -80,6 +84,14 @@ export default {
             userName: this.form.userName,
             password: this.form.password
           })
+          console.log(this.is_remember)
+          let accountInfo = this.form.userName + '&' + this.form.password
+          if (this.is_remember) {
+            console.log(accountInfo)
+            setCookie('accountInfo', accountInfo, 1440 * 3)
+          } else {
+            delCookie('accountInfo')
+          }
         }
       })
     },
@@ -87,7 +99,6 @@ export default {
     refreshCode () {
       this.identifyCode = ''
       this.makeCode(this.identifyCodes, 4)
-      console.log(this.identifyCode)
     },
     // 生成随即
     randomNum (min, max) {
@@ -97,10 +108,28 @@ export default {
       for (let i = 0; i < l; i++) {
         this.identifyCode += this.identifyCodes[this.randomNum(0, this.identifyCodes.length)]
       }
+    },
+    loadAccountInfo () {
+      let accountInfo = getCookie('accountInfo')
+      if (Boolean(accountInfo) === false) {
+        return false
+      } else {
+        let index = accountInfo.indexOf('&')
+        let userName = accountInfo.substring(0, index)
+        let passWord = accountInfo.substring(index + 1)
+        this.form.userName = userName
+        this.form.password = passWord
+        this.is_remember = true
+      }
+    },
+    // 跳转找回密码
+    find_my () {
+      this.$router.push({ name: 'password_page' })
     }
   },
   mounted () {
     this.refreshCode()
+    this.loadAccountInfo()
   }
 }
 </script>
