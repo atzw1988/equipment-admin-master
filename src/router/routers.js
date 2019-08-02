@@ -28,6 +28,15 @@ export default [
     component: () => import('@/view/login/login.vue')
   },
   {
+    path: '/password_page',
+    name: 'password_page',
+    meta: {
+      title: 'password - 修改密码',
+      hideInMenu: true
+    },
+    component: () => import('@/view/password/password.vue')
+  },
+  {
     path: '/',
     name: '_home',
     redirect: '/home',
