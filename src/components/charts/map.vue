@@ -52,14 +52,10 @@ export default {
         var curlevel = subList[0].level
         if (curlevel === 'street') {
           let mapJsonList = this.geoJsonData.features
-          console.log(this.geoJsonData)
-          console.log(mapJsonList)
-          console.log(this.cityName)
           let mapJson = {}
           for (let i in mapJsonList) {
             if (mapJsonList[i].properties.name === this.cityName) {
               mapJson.features = [].concat(mapJsonList[i])
-              console.log(mapJson)
             }
           }
           this.mapData = []
