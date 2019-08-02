@@ -442,7 +442,7 @@ export default {
     },
     // 查看设备详情
     show_eq (index) {
-      console.log(index)
+      this.$router.push({ name: 'equipmentList_page', params: { id: index } })
     },
     // 设备列表表格内移出
     remove_eq (index) {

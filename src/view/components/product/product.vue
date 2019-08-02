@@ -72,16 +72,16 @@
         <Button class="edit" type="info" @click="handleeditor">编辑</Button>
         <Row class='detail'>
           <Col span="8">
-            <Col class='left detail_list' span="12">产品名称</Col>
-            <Col class="detail_list" span="12">{{sel.name}}</Col>
+            <Col class='left detail_list last' span="12">产品名称</Col>
+            <Col class="detail_list last" span="12">{{sel.name}}</Col>
           </Col>
           <Col span="8">
-            <Col class='left detail_list' span="12">所属分类</Col>
-            <Col class="detail_list" span="12">{{sel.kind[0]}}>{{sel.kind[1]}}</Col>
+            <Col class='left detail_list last' span="12">所属分类</Col>
+            <Col class="detail_list last" span="12">{{sel.kind[0]}}>{{sel.kind[1]}}</Col>
           </Col>
           <Col span="8">
-            <Col class='left detail_list' span="12">创建时间</Col>
-            <Col class="right detail_list" span="12">{{sel.time}}</Col>
+            <Col class='left detail_list last' span="12">创建时间</Col>
+            <Col class="right detail_list last" span="12">{{sel.time}}</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">节点类型</Col>
@@ -105,8 +105,8 @@
             <Col class="right detail_list" span="12">{{sel.agreement}}</Col>
           </Col>
           <Col span="24">
-            <Col class='left detail_list last' span="4">产品描述</Col>
-            <Col class="right detail_list last" span="20">{{sel.desc}}</Col>
+            <Col class='left detail_list' span="4">产品描述</Col>
+            <Col class="right detail_list" span="20">{{sel.desc}}</Col>
           </Col>
         </Row>
       </div>

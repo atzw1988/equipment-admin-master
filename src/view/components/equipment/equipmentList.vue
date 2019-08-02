@@ -498,6 +498,9 @@ export default {
     getTableData().then(res => {
       this.tableData = res.data
     })
+    if (this.$route.params.id) {
+      this.is_detail_show = false
+    }
   }
 }
 </script>
