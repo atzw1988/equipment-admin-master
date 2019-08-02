@@ -8,7 +8,12 @@
         </infor-card>
       </i-col>
     </Row>
-    <Row :gutter="20" style="margin-top: 10px;">
+    <Row>
+      <Card shadow>
+        <chart-map style="height: 670px;" :value="pieData" text="用户访问来源"></chart-map>
+      </Card>
+    </Row>
+    <!-- <Row :gutter="20" style="margin-top: 10px;">
       <i-col :md="24" :lg="8" style="margin-bottom: 20px;">
         <Card shadow>
           <chart-pie style="height: 300px;" :value="pieData" text="用户访问来源"></chart-pie>
@@ -24,23 +29,22 @@
       <Card shadow>
         <example style="height: 310px;"/>
       </Card>
-    </Row>
+    </Row> -->
   </div>
 </template>
 
 <script>
 import InforCard from '_c/info-card'
 import CountTo from '_c/count-to'
-import { ChartPie, ChartBar } from '_c/charts'
+import { ChartMap } from '_c/charts'
 import Example from './example.vue'
 export default {
   name: 'home',
   components: {
     InforCard,
     CountTo,
-    ChartPie,
-    ChartBar,
-    Example
+    Example,
+    ChartMap
   },
   data () {
     return {
@@ -70,8 +74,9 @@ export default {
       }
     }
   },
+  methods: {
+  },
   mounted () {
-    //
   }
 }
 </script>
