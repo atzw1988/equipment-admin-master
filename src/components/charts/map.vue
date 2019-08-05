@@ -24,6 +24,7 @@ export default {
       opts: {},
       district: {},
       cityName: '中国',
+      cityCenter: [34.915085, 116.368324],
       areaCode: 10000,
       geoJsonData: '',
       echartsMap: null,
@@ -38,8 +39,15 @@ export default {
   methods: {
     back_map () {
       if (this.deepTree.length > 1) {
+        if (this.deepTree.length === 2) {
+          this.cityCenter = [34.915085, 116.368324]
+        } else {
+          console.log(this.deepTree[this.deepTree.length - 1])
+          this.cityCenter = this.deepTree[this.deepTree.length - 1].center
+        }
         this.mapData = this.deepTree[this.deepTree.length - 1].mapData
         this.deepTree.pop()
+        console.log(this.deepTree)
         this.loadMapData(this.deepTree[this.deepTree.length - 1].code)
       }
     },
@@ -51,6 +59,7 @@ export default {
       if (subList) {
         var curlevel = subList[0].level
         if (curlevel === 'street') {
+          console.log(subList)
           let mapJsonList = this.geoJsonData.features
           let mapJson = {}
           for (let i in mapJsonList) {
@@ -59,7 +68,12 @@ export default {
             }
           }
           this.mapData = []
-          this.mapData.push({ name: this.cityName, value: Math.random() * 100, level: curlevel })
+          this.mapData.push({
+            name: this.cityName,
+            value: Math.random() * 100,
+            level: curlevel
+            // center: [ subList[i].center.lat, subList[i].center.lng ]
+          })
           this.loadMap(this.cityName, mapJson)
           this.geoJsonData = mapJson
           return
@@ -68,11 +82,13 @@ export default {
         for (var i = 0, l = subList.length; i < l; i++) {
           var name = subList[i].name
           var cityCode = subList[i].adcode
+          var center = [ subList[i].center.lat, subList[i].center.lng ]
           this.mapData.push({
             name: name,
             value: Math.random() * 100,
             cityCode: cityCode,
-            level: curlevel
+            level: curlevel,
+            center: center
           })
         }
         this.loadMapData(adcode)
@@ -103,9 +119,9 @@ export default {
           visualMap: {
             type: 'piecewise',
             pieces: [
-              { max: 30, label: '安全', color: '#2c9a42' },
-              { min: 30, max: 60, label: '警告', color: '#d08a00' },
-              { min: 60, label: '危险', color: '#c23c33' }
+              { max: 30, label: '安全', color: '#50a3ba' },
+              { min: 30, max: 60, label: '警告', color: '#eac736' },
+              { min: 60, label: '危险', color: '#d94e5d' }
             ],
             color: '#000',
             textStyle: {
@@ -117,7 +133,8 @@ export default {
             {
               name: '数据名称',
               type: 'map',
-              roam: false,
+              roam: true,
+              center: [this.cityCenter[1], this.cityCenter[0]],
               mapType: mapName,
               selectedMode: 'single',
               showLegendSymbol: false,
@@ -162,9 +179,11 @@ export default {
       if (params.data.level === 'street') return
       this.cityCode = params.data.cityCode
       this.cityName = params.data.name
+      this.cityCenter = params.data.center
+      console.log(this.city)
       this.district.search(this.cityCode, (status, result) => {
         if (status === 'complete') {
-          this.deepTree.push({ mapData: this.mapData, code: params.data.cityCode })
+          this.deepTree.push({ mapData: this.mapData, code: params.data.cityCode, center: params.data.center })
           this.getData(result.districtList[0], params.data.level, this.cityCode)
         }
       })
