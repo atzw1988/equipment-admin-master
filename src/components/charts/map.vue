@@ -2,6 +2,15 @@
   <!-- <div id="map" ref="dom" class="charts chart-map"></div> -->
   <div class="eq_may">
     <Button class="back" @click="back_map" type="info">返回</Button>
+    <!-- <div class="map_tips" v-if="is_tip_show" :style="{top: top + 'px', left: left + 'px'}">
+      <div v-cloak class="map_tips_city">{{eq_num.name}}</div>
+      <div class="map_tips_group">
+        <div class="map_tips_lol">地磁设备：{{eq_num.a}}万个</div>
+        <div class="map_tips_king">井盖设备：{{eq_num.b}}万个</div>
+        <div class="map_tips_cf">路灯设备：{{eq_num.c}}万个</div>
+        <div class="map_tips_car">定位器设备：{{eq_num.d}}万个</div>
+      </div>
+    </div> -->
     <div style="height:670px;" id="map" ref="map"></div>
   </div>
 </template>
@@ -33,7 +42,21 @@ export default {
       mapData: [],
       deepTree: [
         { mapData: this.mapData, code: 100000 }
-      ]
+      ],
+      is_tip_show: false,
+      eq_num: {
+        name: '北京',
+        a: 10000,
+        b: 10001,
+        c: 10002,
+        d: 10003
+      },
+      selcityCode: '',
+      top: 0,
+      left: 0,
+      count: 0,
+      timeTicket: null,
+      time_tip: 1
     }
   },
   methods: {
@@ -85,13 +108,14 @@ export default {
           var center = [ subList[i].center.lat, subList[i].center.lng ]
           this.mapData.push({
             name: name,
-            value: Math.random() * 100,
+            value: (Math.random() * 100).toFixed(2),
             cityCode: cityCode,
             level: curlevel,
             center: center
           })
         }
         this.loadMapData(adcode)
+        this.timeTick()
       }
     },
     loadMapData (areaCode) {
@@ -129,11 +153,35 @@ export default {
             },
             visibility: 'off'
           },
+          tooltip: {
+            padding: 0,
+            enterable: true,
+            transitionDuration: this.time_tip,
+            textStyle: {
+              color: '#000',
+              decoration: 'none'
+            },
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            formatter: (params) => {
+              let tipHtml = ''
+              tipHtml = '<div class="map_tips">' +
+              '<div v-cloak class="map_tips_city">' + params.name.substr(0, 2) + '</div>' +
+              '<div class="map_tips_group">' +
+                '<div class="map_tips_lol">地磁设备：' + params.data.value + '万个</div>' +
+                '<div class="map_tips_king">井盖设备：' + params.data.value + '万个</div>' +
+                '<div class="map_tips_cf">路灯设备：' + params.data.value + '万个</div>' +
+                '<div class="map_tips_car">定位器设备：' + params.data.value + '万个</div>' +
+              '</div>' +
+              '</div>'
+              return tipHtml
+            }
+          },
           series: [
             {
               name: '数据名称',
               type: 'map',
               roam: true,
+              zoom: 1.5,
               center: [this.cityCenter[1], this.cityCenter[0]],
               mapType: mapName,
               selectedMode: 'single',
@@ -180,19 +228,56 @@ export default {
       this.cityCode = params.data.cityCode
       this.cityName = params.data.name
       this.cityCenter = params.data.center
-      console.log(this.city)
       this.district.search(this.cityCode, (status, result) => {
         if (status === 'complete') {
           this.deepTree.push({ mapData: this.mapData, code: params.data.cityCode, center: params.data.center })
           this.getData(result.districtList[0], params.data.level, this.cityCode)
         }
       })
+    },
+    echartsMapMove (params) {
+      console.log('移入')
+      this.time_tip = 0
+      clearInterval(this.timeTicket)
+      this.echartsMap.dispatchAction({
+        type: 'showTip',
+        seriesIndex: 0,
+        dataIndex: params.dataIndex
+      })
+    },
+    echartsMapOut () {
+      console.log('移出')
+      this.time_tip = 1
+      let dataLength = this.mapData.length
+      clearInterval(this.timeTicket)
+      this.timeTicket = setInterval(() => {
+        this.echartsMap.dispatchAction({
+          type: 'showTip',
+          seriesIndex: 0,
+          dataIndex: (this.count) % dataLength
+        })
+        this.count++
+      }, 5000)
+    },
+    timeTick () {
+      let dataLength = this.mapData.length
+      clearInterval(this.timeTicket)
+      this.timeTicket = setInterval(() => {
+        this.echartsMap.dispatchAction({
+          type: 'showTip',
+          seriesIndex: 0,
+          dataIndex: (this.count) % dataLength
+        })
+        this.count++
+      }, 5000)
     }
   },
   mounted () {
     this.$nextTick(() => {
       this.echartsMap = echarts.init(this.$refs.map)
       this.echartsMap.on('click', this.echartsMapClick)
+      this.echartsMap.on('mousemove', this.echartsMapMove)
+      this.echartsMap.on('mouseout', this.echartsMapOut)
       this.opts = {
         subdistrict: 1,
         showbiz: false
