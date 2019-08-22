@@ -115,7 +115,7 @@
 <script>
 // import Tables from '_c/tables'
 import './groupmana.less'
-import { getTableData } from '@/api/data'
+import { getGroupList } from '@/api/groupmana'
 export default {
   name: 'tables_page',
 
@@ -309,6 +309,19 @@ export default {
     }
   },
   methods: {
+    // 获取分组列表
+    get_group_list () {
+      let params = {
+        currentPage: this.page_index,
+        pageSize: this.ps
+      }
+      if (this.searchValue) {
+        params.group_name = this.searchValue
+      }
+      getGroupList(params).then(res => {
+        console.log(res)
+      })
+    },
     handleDelete (params) {
       console.log(params)
     },
@@ -488,9 +501,7 @@ export default {
     }
   },
   mounted () {
-    getTableData().then(res => {
-      this.tableData = res.data
-    })
+    this.get_group_list()
   }
 }
 </script>

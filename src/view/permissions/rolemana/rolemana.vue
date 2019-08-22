@@ -7,7 +7,7 @@
         <Button @click="handleSearch" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
         <Button @click="handleAdd" class="add-btn" type="success"><Icon type="search"/>&nbsp;添加角色&nbsp;</Button>
       </div>
-      <Table border :columns="columns" :data="tableData"></Table>
+      <Table border :columns="columns" :data="role_list"></Table>
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
@@ -22,15 +22,28 @@
         <FormItem label="角色权限">
           <FormItem label="">
           </FormItem>
-          <span>数据展示</span>
+          <FormItem v-for="(item, indexa) in mod_list" :key="indexa">
+            <span>{{item.modules_name}}</span>
+            <FormItem v-for="(ele, indexb) in item.children" :key="indexb" :label="ele.modules_name">
+              <CheckboxGroup v-model="formValidate[ele.modules_permission]" @on-change="checkAllGroupChange">
+                <Checkbox :label="params.modules_name" v-for="(params, indexc) in ele.children" :key="indexc"></Checkbox>
+                <Checkbox
+                :indeterminate="indeterminate[ele.modules_permission]"
+                :value="checkAll[ele.modules_permission]"
+                @click.prevent.native="handleCheckAll(ele.modules_permission)">全选</Checkbox>
+              </CheckboxGroup>
+            </FormItem>
+          </FormItem>
+
+          <!-- <span>数据展示</span>
           <FormItem label="首页">
             <CheckboxGroup v-model="formValidate.home">
               <Checkbox label="查看"></Checkbox>
             </CheckboxGroup>
-          </FormItem>
-          <span>设备管理</span>
+          </FormItem>-->
+          <!-- <span>设备管理</span>
           <FormItem label="产品列表">
-            <CheckboxGroup v-model="formValidate.product" @on-change="checkAllGroupChange_product">
+            <CheckboxGroup v-model="formValidate.product" @on-change="checkAllGroupChange">
               <Checkbox label="查看"></Checkbox>
               <Checkbox label="修改"></Checkbox>
               <Checkbox label="新建"></Checkbox>
@@ -40,8 +53,8 @@
               :value="checkAll.product"
               @click.prevent.native="handleCheckAll('product')">全选</Checkbox>
             </CheckboxGroup>
-          </FormItem>
-          <FormItem label="设备列表">
+          </FormItem> -->
+          <!-- <FormItem label="设备列表">
             <CheckboxGroup v-model="formValidate.eq" @on-change="checkAllGroupChange_eq">
               <Checkbox label="查看"></Checkbox>
               <Checkbox label="修改"></Checkbox>
@@ -89,7 +102,7 @@
               :value="checkAll.account"
               @click.prevent.native="handleCheckAll('account')">全选</Checkbox>
             </CheckboxGroup>
-          </FormItem>
+          </FormItem> -->
         </FormItem>
         <FormItem>
           <Button type="primary" @click="handleSubmit('formValidate')">提交</Button>
@@ -219,17 +232,17 @@
 <script>
 // import Tables from '_c/tables'
 import './rolemana.less'
-import { getTableData } from '@/api/data'
+import { getRoleList, deleteRole, roleDetail, getModuleList } from '@/api/rolemana'
 export default {
   name: 'tables_page',
 
   data () {
     return {
       columns: [
-        { title: '角色名称', key: 'name' },
-        { title: '角色描述', key: 'name' },
-        { title: '用户数', key: 'email' },
-        { title: '创建时间', key: 'createTime' },
+        { title: '角色名称', key: 'role_name' },
+        { title: '角色描述', key: 'role_ms' },
+        { title: '用户数', key: 'userNumber' },
+        { title: '创建时间', key: 'create_date' },
         {
           title: '操作',
           key: 'handle',
@@ -281,40 +294,24 @@ export default {
       is_add_show: true,
       is_detail_show: true,
       is_editor: false,
-      tableData: [],
+      role_list: [],
       searchValue: '',
       total_ps: 40,
       page_index: 1,
       ps: 10,
+      mod_list: [],
       formValidate: {
         name: '',
-        desc: '',
-        home: [],
-        product: [],
-        eq: [],
-        group: [],
-        role: [],
-        account: []
+        desc: ''
       },
       ruleValidate: {
         name: [
           { required: true, message: '分组名称是必填选项', trigger: 'blur' }
         ]
       },
-      indeterminate: {
-        product: false,
-        eq: false,
-        group: false,
-        role: false,
-        account: false
-      },
-      checkAll: {
-        product: false,
-        eq: false,
-        group: false,
-        role: false,
-        account: false
-      },
+      indeterminate: {},
+      checkAll: {},
+      check_list: {},
       sel: {
         name: '运维',
         desc: '只有查询权限',
@@ -328,39 +325,112 @@ export default {
     }
   },
   methods: {
-    exportExcel () {
-      this.$refs.tables.exportCsv({
-        filename: `table-${(new Date()).valueOf()}.csv`
+    // 获取角色列表
+    get_role_list () {
+      let params = {
+        currentPage: this.page_index,
+        pageSize: this.ps
+      }
+      getRoleList(params).then(res => {
+        if (res.status === 200) {
+          this.role_list = res.data.data.records
+          this.total_ps = res.data.data.total
+        } else {
+          this.role_list = []
+          this.$Notice.error({
+            title: '获取列表失败！'
+          })
+        }
+      })
+    },
+    // 获取模块列表
+    get_module_list () {
+      getModuleList().then(res => {
+        if (res.status === 200) {
+          let list = []
+          let data = res.data.data
+          console.log(data)
+          data.forEach(item => {
+            let params = {
+              children: []
+            }
+            if (!item.parent_id) {
+              params.modules_name = item.modules_name
+              params.modules_id = item.modules_id
+              list.push(params)
+            }
+          })
+          data.forEach(item => {
+            list.forEach(ele => {
+              let params = {
+                children: []
+              }
+              if (item.parent_id === ele.modules_id) {
+                params.modules_name = item.modules_name
+                params.modules_id = item.modules_id
+                params.modules_permission = item.modules_permission
+                this.indeterminate[item.modules_permission] = false
+                this.checkAll[item.modules_permission] = false
+                this.check_list[item.modules_permission] = []
+                ele.children.push(params)
+              }
+            })
+          })
+          data.forEach(item => {
+            list.forEach(ele => {
+              ele.children.forEach(a => {
+                let params = {}
+                if (item.parent_id === a.modules_id) {
+                  params.modules_name = item.modules_name
+                  params.modules_id = item.modules_id
+                  a.children.push(params)
+                  this.check_list[a.modules_permission].push(item.modules_id)
+                }
+              })
+            })
+          })
+          console.log(this.formValidate)
+          this.mod_list = list
+        } else {
+          this.$Notice.error({
+            title: '获取模块列表失败！'
+          })
+        }
       })
     },
     handleSearch () {
       console.log('搜索')
     },
+    // 新建角色
     handleAdd () {
       this.is_add_show = false
-      this.formValidate = {
-        name: '',
-        desc: ''
-      }
     },
+    // 表格内查看角色详情
     show (index) {
       console.log(index)
       this.is_detail_show = false
       this.is_editor = true
+      let params = {
+        role_id: this.role_list[index].role_id
+      }
+      roleDetail(params).then(res => {
+        console.log(res)
+      })
     },
     remove (index) {
       console.log(index)
-      this.$Modal.confirm({
-        title: '温馨提示',
-        content: '是否删除该角色，删除后无法撤销！',
-        onOk: () => {
+      deleteRole(this.role_list[index].role_id).then(res => {
+        console.log(res)
+        if (res.status === 200) {
           this.$Message.success({
             content: '设备删除成功！',
             top: 100
           })
-        },
-        onCancel: () => {
-          this.$Message.info('Clicked cancel')
+        } else {
+          this.$Message.error({
+            content: '设备删除失败！',
+            top: 100
+          })
         }
       })
     },
@@ -388,8 +458,8 @@ export default {
       this.is_editor = false
     },
     handleCheckAll (val) {
-      console.log(val)
       console.log(this.indeterminate[val])
+      console.log(this.checkAll[val])
       if (this.indeterminate[val]) {
         this.checkAll[val] = false
       } else {
@@ -397,69 +467,28 @@ export default {
       }
       this.indeterminate[val] = false
       if (this.checkAll[val]) {
-        this.formValidate[val] = ['查看', '修改', '新建', '删除']
+        this.formValidate[val] = ['查看', '添加', '编辑', '删除']
+        console.log(this.formValidate)
       } else {
         this.formValidate[val] = []
       }
     },
-    checkAllGroupChange_product (data) {
-      if (data.length === 4) {
-        this.indeterminate.product = false
-        this.checkAll.product = true
-      } else if (data.length > 0) {
-        this.indeterminate.product = true
-        this.checkAll.product = false
-      } else {
-        this.indeterminate.product = false
-        this.checkAll.product = false
-      }
-    },
-    checkAllGroupChange_eq (data) {
-      if (data.length === 4) {
-        this.indeterminate.eq = false
-        this.checkAll.eq = true
-      } else if (data.length > 0) {
-        this.indeterminate.eq = true
-        this.checkAll.eq = false
-      } else {
-        this.indeterminate.eq = false
-        this.checkAll.eq = false
-      }
-    },
-    checkAllGroupChange_group (data) {
-      if (data.length === 4) {
-        this.indeterminate.group = false
-        this.checkAll.group = true
-      } else if (data.length > 0) {
-        this.indeterminate.group = true
-        this.checkAll.group = false
-      } else {
-        this.indeterminate.group = false
-        this.checkAll.group = false
-      }
-    },
-    checkAllGroupChange_role (data) {
-      if (data.length === 4) {
-        this.indeterminate.role = false
-        this.checkAll.role = true
-      } else if (data.length > 0) {
-        this.indeterminate.role = true
-        this.checkAll.role = false
-      } else {
-        this.indeterminate.role = false
-        this.checkAll.role = false
-      }
-    },
-    checkAllGroupChange_account (data) {
-      if (data.length === 4) {
-        this.indeterminate.account = false
-        this.checkAll.account = true
-      } else if (data.length > 0) {
-        this.indeterminate.account = true
-        this.checkAll.account = false
-      } else {
-        this.indeterminate.account = false
-        this.checkAll.account = false
+    checkAllGroupChange (data) {
+      console.log(data)
+      for (var i in this.indeterminate) {
+        if (this.formValidate[i]) {
+          console.log(this.formValidate)
+          if (this.formValidate[i].length >= 4) {
+            this.indeterminate[i] = false
+            this.checkAll[i] = true
+          } else if (this.formValidate[i].length > 0) {
+            this.indeterminate[i] = true
+            this.checkAll[i] = false
+          } else {
+            this.indeterminate[i] = false
+            this.checkAll[i] = false
+          }
+        }
       }
     },
     handleSubmit (name) {
@@ -497,9 +526,8 @@ export default {
     }
   },
   mounted () {
-    getTableData().then(res => {
-      this.tableData = res.data
-    })
+    this.get_role_list()
+    this.get_module_list()
   }
 }
 </script>

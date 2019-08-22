@@ -7,37 +7,37 @@
         <Button @click="handleSearch" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
         <Button @click="handleAdd" class="add-btn" type="success"><Icon type="search"/>&nbsp;新建账户&nbsp;</Button>
       </div>
-      <Table border :columns="columns" :data="tableData"></Table>
+      <Table :loading="loading" border :columns="columns" :data="tableData"></Table>
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
       <div class="header">{{text_header}}</div>
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
-        <FormItem label="账号名称" prop="account">
-          <Input v-model="formValidate.account" placeholder="请输入账户名称" clearable></Input>
+        <FormItem label="账号名称" prop="login_name">
+          <Input v-model="formValidate.login_name" placeholder="请输入账户名称" clearable></Input>
         </FormItem>
-        <FormItem label="姓名" prop="name">
-          <Input v-model="formValidate.name" placeholder="请输入姓名" clearable></Input>
+        <FormItem label="姓名" prop="user_name">
+          <Input v-model="formValidate.user_name" placeholder="请输入姓名" clearable></Input>
         </FormItem>
-        <FormItem label="联系电话" prop="phone">
-          <Input v-model="formValidate.phone" placeholder="请输入联系电话" clearable></Input>
+        <FormItem label="联系电话" prop="user_phone">
+          <Input v-model="formValidate.user_phone" placeholder="请输入联系电话" clearable></Input>
         </FormItem>
-        <FormItem label="企业名称" prop="enterprise">
-          <Select v-if="formValidate.kind === 1" clearable v-model="formValidate.enterprise" placeholder="请选择账户所属的企业">
-            <Option v-for="item in enterpriseList" :value='item.value' :key="item.value">{{item.label}}</Option>
+        <FormItem label="企业名称" prop="org_id">
+          <Select v-if="role_kind === 1" clearable v-model="formValidate.org_id" placeholder="请选择账户所属的企业">
+            <Option v-for="item in enterpriseList" :value='item.org_id' :key="item.org_id">{{item.org_name}}</Option>
           </Select>
-          <span v-if="formValidate.kind !== 1">xxx公司</span>
+          <span v-if="role_kind !== 1">xxx公司</span>
         </FormItem>
-        <FormItem label="角色" prop="role">
-          <Select clearable v-model="formValidate.role" placeholder="请选择账户所属的角色类型">
-            <Option v-for="item in roleList" :value='item.value' :key="item.value">{{item.label}}</Option>
+        <FormItem label="角色" prop="role_id">
+          <Select clearable v-model="formValidate.role_id" placeholder="请选择账户所属的角色类型">
+            <Option v-for="item in roleList" :value='item.role_id' :key="item.role_id">{{item.role_name}}</Option>
           </Select>
         </FormItem>
-        <FormItem label="是否启用" prop="enable">
-            <RadioGroup v-model="formValidate.enable">
-                <Radio label="male">是</Radio>
-                <Radio label="female">否</Radio>
+        <FormItem label="是否启用" prop="user_state">
+            <RadioGroup v-model="formValidate.user_state">
+                <Radio label="1">是</Radio>
+                <Radio label="0">否</Radio>
             </RadioGroup>
         </FormItem>
         <FormItem>
@@ -54,27 +54,27 @@
         <Row class='detail'>
           <Col span="24">
             <Col span="3">账号名称:</Col>
-            <Col span="5">{{sel.account}}</Col>
+            <Col span="5">{{sel.login_name}}</Col>
           </Col>
           <Col span="24">
             <Col span="3">姓名:</Col>
-            <Col span="5">{{sel.name}}</Col>
+            <Col span="5">{{sel.user_name}}</Col>
           </Col>
           <Col span="24">
             <Col span="3">联系电话:</Col>
-            <Col span="5">{{sel.phone}}</Col>
+            <Col span="5">{{sel.user_phone}}</Col>
           </Col>
           <Col span="24">
             <Col span="3">企业名称:</Col>
-            <Col span="5">{{sel.enterprise}}</Col>
+            <Col span="5">{{sel.org_name}}</Col>
           </Col>
           <Col span="24">
             <Col span="3">角色:</Col>
-            <Col span="5">{{sel.role}}</Col>
+            <Col span="5">{{sel.role_name}}</Col>
           </Col>
           <Col span="24">
             <Col span="3">添加时间:</Col>
-            <Col span="5">{{sel.time}}</Col>
+            <Col span="5">{{sel.create_date}}</Col>
           </Col>
         </Row>
       </div>
@@ -85,36 +85,36 @@
 <script>
 // import Tables from '_c/tables'
 import './accountmana.less'
-import { getTableData } from '@/api/data'
+import { getUserList, deleteUser, addUser, updateUser, lockUser, getRoleList, getOrgList } from '@/api/user'
 export default {
   name: 'tables_page',
 
   data () {
     return {
       columns: [
-        { title: '账户名称', key: 'name' },
-        { title: '姓名', key: 'name' },
-        { title: '电话', key: 'name' },
-        { title: '企业名称', key: 'email' },
-        { title: '角色', key: 'name' },
+        { title: '账户名称', key: 'login_name' },
+        { title: '姓名', key: 'user_name' },
+        { title: '电话', key: 'user_phone' },
+        { title: '企业名称', key: 'org_name' },
+        { title: '角色', key: 'role_name' },
         {
           title: '是否启用',
-          key: 'handle',
+          key: 'user_state',
           render: (h, params) => {
             return h('div', [
               h('i-switch', {
                 props: {
                   size: 'large',
-                  value: params.row.handle,
-                  'true-value': '1',
-                  'false-value': '0'
+                  value: params.row.user_state,
+                  'true-value': 1,
+                  'false-value': 2
                 },
                 style: {
                   marginRight: '5px'
                 },
                 on: {
                   'on-change': (val) => {
-                    this.switch_change(params.index, val)
+                    this.switch_change(params.row, val)
                   }
                 }
               }, [h('span', {
@@ -132,7 +132,7 @@ export default {
             ])
           }
         },
-        { title: '创建时间', key: 'createTime' },
+        { title: '创建时间', key: 'create_date' },
         {
           title: '操作',
           key: 'handle',
@@ -185,108 +185,141 @@ export default {
       is_detail_show: true,
       is_editor: false,
       tableData: [],
+      loading: false,
       searchValue: '',
-      total_ps: 40,
+      total_ps: 0,
       page_index: 1,
       ps: 10,
       text_header: '',
       formValidate: {
-        account: '',
-        name: '',
-        phone: '',
-        enterprise: '',
-        role: '',
-        enable: '',
-        kind: 1
+        login_name: '',
+        user_name: '',
+        user_phone: '',
+        org_id: '',
+        role_id: '',
+        user_state: 0
       },
+      role_kind: 1,
       ruleValidate: {
-        account: [
+        login_name: [
           { required: true, message: '账户名称是必填选项', trigger: 'blur' }
         ],
-        name: [
+        user_name: [
           { required: true, message: '姓名是必填选项', trigger: 'blur' }
         ],
-        phone: [
+        user_phone: [
           { required: true, message: '联系电话是必填选项', trigger: 'blur' }
         ],
-        enterprise: [
+        org_id: [
           { required: true, message: '必须选择所归属的企业', trigger: 'change' }
         ],
-        role: [
+        role_id: [
           { required: true, message: '必须选择所归属的角色类型', trigger: 'change' }
         ],
-        enable: [
+        user_state: [
           { required: true, message: '必须选择账户是否启用', trigger: 'change' }
         ]
       },
-      enterpriseList: [
-        { value: 'xxx公司', label: 'xxx公司' },
-        { value: 'xxxx公司', label: 'xxxx公司' },
-        { value: 'xxxxx公司', label: 'xxxxx公司' }
-      ],
-      roleList: [
-        { value: '管理员', label: '管理员' },
-        { value: '运维', label: '运维' },
-        { value: '测试', label: '测试' }
-      ],
-      sel: {
-        account: 'huateng',
-        name: '张三',
-        phone: '18888888888',
-        enterprise: 'xxxx公司',
-        role: '管理员',
-        enable: 'male',
-        kind: 1,
-        time: '2019-07-25'
-      }
+      enterpriseList: [],
+      roleList: [],
+      sel: {}
     }
   },
   methods: {
-    exportExcel () {
-      this.$refs.tables.exportCsv({
-        filename: `table-${(new Date()).valueOf()}.csv`
+    // 获取账户列表
+    get_list () {
+      this.loading = true
+      let params = {
+        currentPage: this.page_index,
+        pageSize: this.ps
+      }
+      if (this.searchValue) {
+        params.login_name = this.searchValue
+      }
+      getUserList(params).then(res => {
+        console.log(res)
+        if (res.status === 200) {
+          this.tableData = res.data.data.records
+          this.total_ps = res.data.data.total
+        } else {
+          this.$Message.error(res.data.message)
+        }
+        this.loading = false
       })
     },
     // 搜索
     handleSearch () {
       console.log('搜索')
+      this.get_list()
     },
     // 添加按钮
     handleAdd () {
       this.is_add_show = false
       this.text_header = '新建账户'
       this.formValidate = {
-        account: '',
-        name: '',
-        phone: '',
-        enterprise: '',
-        role: '',
-        enable: '',
-        kind: 1
+        login_name: '',
+        user_name: '',
+        user_phone: '',
+        org_id: '',
+        role_id: '',
+        user_state: 0
       }
     },
     // 表格内账号启用开关
     switch_change (params, val) {
-      console.log(params)
-      console.log(val)
+      let data = {
+        user_id: params.user_id,
+        user_state: val
+      }
+      lockUser(data).then(res => {
+        console.log(res)
+        if (res.data) {
+          this.$Message.success({
+            content: '操作成功！',
+            top: 100
+          })
+        } else {
+          this.$Message.error({
+            content: '操作失败！',
+            top: 100
+          })
+        }
+      })
     },
     // 查看
     show (index) {
       console.log(index)
+      this.sel = this.tableData[index]
       this.is_detail_show = false
       this.is_editor = true
     },
     // 表格内删除
     remove (index) {
-      console.log(index)
+      deleteUser(this.tableData[index].user_id).then(res => {
+        if (res.status === 200) {
+          this.$Message.success({
+            content: '删除账户成功！',
+            top: 100
+          })
+          this.get_list()
+        } else {
+          this.$Message.error({
+            content: '删除账户失败！',
+            top: 100
+          })
+        }
+      })
     },
     // 换页
     handlepage (val) {
-      console.log(val)
+      this.page_index = val
+      this.get_list()
     },
     // 每页条数切换
     handlepagesize (val) {
-      console.log(val)
+      this.page_index = 1
+      this.ps = val
+      this.get_list()
     },
     // 新建或者编辑页面关闭
     close () {
@@ -307,18 +340,29 @@ export default {
     // 新建或者编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
-        console.log(valid)
+        console.log(this.is_editor)
         if (valid) {
           console.log(this.formValidate)
-          if (this.is_editor) {
-            this.$Message.success({
-              content: '添加产品成功！',
-              top: 100
+          this.formValidate.user_state = this.formValidate.user_state * 1
+          if (!this.is_editor) {
+            addUser(this.formValidate).then(res => {
+              console.log(res)
+              this.$Message.success({
+                content: '添加账号成功！',
+                top: 100
+              })
+              this.is_add_show = true
+              this.get_list()
             })
           } else {
-            this.$Message.success({
-              content: '修改产品成功！',
-              top: 100
+            updateUser(this.formValidate).then(res => {
+              console.log(res)
+              this.$Message.success({
+                content: '修改账户成功！',
+                top: 100
+              })
+              this.is_add_show = true
+              this.get_list()
             })
           }
         } else {
@@ -343,8 +387,20 @@ export default {
     }
   },
   mounted () {
-    getTableData().then(res => {
-      this.tableData = res.data
+    this.get_list()
+    getRoleList().then(res => {
+      if (res.status === 200) {
+        this.roleList = res.data.data
+      } else {
+        this.$Message.error(res.data.message)
+      }
+    })
+    getOrgList().then(res => {
+      if (res.status === 200) {
+        this.enterpriseList = res.data.data
+      } else {
+        this.$Message.error(res.data.message)
+      }
     })
   }
 }

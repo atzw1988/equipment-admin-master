@@ -1,3 +1,10 @@
+<!--
+ * @Description: In User Settings Edit
+ * @Author: your name
+ * @Date: 2019-07-22 16:06:56
+ * @LastEditTime: 2019-07-22 16:06:56
+ * @LastEditors: your name
+ -->
 <template>
   <div>
 
@@ -8,7 +15,7 @@
         <Button @click="handleAdd" class="add-btn" type="success"><Icon type="search"/>&nbsp;新建&nbsp;</Button>
       </div>
       <!-- <tables ref="tables" editable searchable search-place="top" v-model="tableData" :columns="columns" @on-delete="handleDelete"/> -->
-      <Table border :columns="columns" :data="tableData"></Table>
+      <Table :loading='loading' border :columns="columns" :data="tableData"></Table>
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
@@ -16,43 +23,43 @@
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
         <span class="header_text">基础信息</span>
-        <FormItem label="产品名称" prop="name">
-          <Input v-model="formValidate.name" placeholder="请输入产品名称" clearable></Input>
+        <FormItem label="产品名称" prop="product_name">
+          <Input v-model="formValidate.product_name" placeholder="请输入产品名称" clearable></Input>
         </FormItem>
         <FormItem label="所属分类">
-          <Cascader :data="eq_kind" v-model="formValidate.kind" placeholder="请选择所属分类" filterable trigger="hover"></Cascader>
+          <Cascader :data="eq_kind" v-model="formValidate.product_type" placeholder="请选择所属分类" filterable trigger="hover"></Cascader>
         </FormItem>
         <span class="header_text">其他信息</span>
-        <FormItem label="节点类型" prop="node_kind">
-          <RadioGroup v-model="formValidate.node_kind">
-            <Radio label="male">设备</Radio>
-            <Radio label="female">网关</Radio>
+        <FormItem label="节点类型" prop="product_ntype">
+          <RadioGroup v-model="formValidate.product_ntype">
+            <Radio label="1">设备</Radio>
+            <Radio label="2">网关</Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="是否接入网关" prop="gateway" label-position='right'>
-          <RadioGroup v-model="formValidate.gateway">
-            <Radio label="male">是</Radio>
-            <Radio label="female">否</Radio>
+        <FormItem label="是否接入网关" prop="is_access_gateway" label-position='right'>
+          <RadioGroup v-model="formValidate.is_access_gateway">
+            <Radio label="1">是</Radio>
+            <Radio label="2">否</Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="联网协议" prop="agreement">
-            <Select v-model="formValidate.agreement" placeholder="请选择联网协议">
+        <FormItem label="联网协议" prop="product_netmodel">
+            <Select v-model="formValidate.product_netmodel" placeholder="请选择联网协议">
                 <Option value="CoAP">CoAP</Option>
                 <Option value="WIFI">WIFI</Option>
-                <Option value="cellular">蜂窝(2G/3G/4G)</Option>
-                <Option value="etheric">以太网</Option>
+                <Option value="蜂窝(2G/3G/4G)">蜂窝(2G/3G/4G)</Option>
+                <Option value="以太网">以太网</Option>
                 <Option value="LoRAWAN">LoRAWAN</Option>
-                <Option value="other">其他</Option>
+                <Option value="其他">其他</Option>
             </Select>
         </FormItem>
-        <FormItem label="数据格式" prop="format">
-            <Select v-model="formValidate.format" placeholder="请选择数据格式">
+        <FormItem label="数据格式" prop="product_dataformat">
+            <Select v-model="formValidate.product_dataformat" placeholder="请选择数据格式">
                 <Option value="ICA">ICA标准数据格式(Alink JSON)</Option>
                 <Option value="custom">遗传/自定义</Option>
             </Select>
         </FormItem>
         <FormItem label="产品描述" prop="desc">
-          <Input v-model="formValidate.desc" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入产品描述..."></Input>
+          <Input v-model="formValidate.product_description" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入产品描述..."></Input>
         </FormItem>
         <FormItem>
           <Button type="primary" @click="handleSubmit('formValidate')">提交</Button>
@@ -64,8 +71,8 @@
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close_detail"/>
       <div class="header">嵊州地磁</div>
       <div class="middle">
-        <span style="margin-right:50px">产品ID：{{sel.name}}</span>
-        <span>设备数量：{{sel.num}}&nbsp;&nbsp;<Icon type="md-eye" size='24'/></span>
+        <span style="margin-right:50px">产品ID：{{sel.product_id}}</span>
+        <span>设备数量：{{sel.deviceCount}}&nbsp;&nbsp;<Icon type="md-eye" size='24'/></span>
       </div>
       <div class="down">
         <span class="detail_text">产品信息</span>
@@ -73,40 +80,40 @@
         <Row class='detail'>
           <Col span="8">
             <Col class='left detail_list last' span="12">产品名称</Col>
-            <Col class="detail_list last" span="12">{{sel.name}}</Col>
+            <Col class="detail_list last" span="12">{{sel.product_name}}</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list last' span="12">所属分类</Col>
-            <Col class="detail_list last" span="12">{{sel.kind[0]}}>{{sel.kind[1]}}</Col>
+            <Col class="detail_list last" span="12">{{sel.product_type.split(',').pop()}}</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list last' span="12">创建时间</Col>
-            <Col class="right detail_list last" span="12">{{sel.time}}</Col>
+            <Col class="right detail_list last" span="12">{{sel.create_date}}</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">节点类型</Col>
-            <Col class="detail_list" span="12">{{sel.node_kind}}</Col>
+            <Col class="detail_list" span="12">{{sel.product_ntype}}</Col>
           </Col>
           <Col span="16">
             <Col class='left detail_list' span="6">数据格式</Col>
-            <Col v-if="sel.format == 'ICA'" class="right detail_list" span="18">ICA标准数据格式(Alink JSON)</Col>
-            <Col v-if="sel.format == 'custom'" class="right detail_list" span="18">遗传/自定义</Col>
+            <Col v-if="sel.product_dataformat == 'ICA'" class="right detail_list" span="18">ICA标准数据格式(Alink JSON)</Col>
+            <Col v-if="sel.product_dataformat == 'custom'" class="right detail_list" span="18">遗传/自定义</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">状态</Col>
-            <Col class="detail_list" span="12">{{sel.status}}</Col>
+            <Col class="detail_list" span="12">{{sel.product_state}}</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">是否接入网关</Col>
-            <Col class="detail_list" span="12">{{sel.gateway}}</Col>
+            <Col class="detail_list" span="12">{{sel.is_access_gateway}}</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">联网协议</Col>
-            <Col class="right detail_list" span="12">{{sel.agreement}}</Col>
+            <Col class="right detail_list" span="12">{{sel.product_netmodel}}</Col>
           </Col>
           <Col span="24">
             <Col class='left detail_list' span="4">产品描述</Col>
-            <Col class="right detail_list" span="20">{{sel.desc}}</Col>
+            <Col class="right detail_list" span="20">{{sel.product_description}}</Col>
           </Col>
         </Row>
       </div>
@@ -140,7 +147,7 @@
 <script>
 // import Tables from '_c/tables'
 import './product.less'
-import { getTableData } from '@/api/data'
+import { getProductList, addProduct, deleteProduct, updateProduct } from '@/api/product'
 export default {
   name: 'tables_page',
 
@@ -163,11 +170,11 @@ export default {
     }
     return {
       columns: [
-        { title: '产品名称', key: 'name', sortable: false },
-        { title: '产品ID', key: 'email', editable: true },
-        { title: '节点类型', key: 'email', editable: true },
-        { title: '设备数', key: 'email', editable: true },
-        { title: '创建时间', key: 'createTime' },
+        { title: '产品名称', key: 'product_name' },
+        { title: '产品ID', key: 'product_id' },
+        { title: '节点类型', key: 'product_ntype' },
+        { title: '设备数', key: 'deviceCount' },
+        { title: '创建时间', key: 'create_date' },
         {
           title: '操作',
           key: 'handle',
@@ -221,36 +228,34 @@ export default {
       is_detail_show: true,
       is_editor: false,
       tableData: [],
+      loading: false,
       searchValue: '',
       total_ps: 40,
       page_index: 1,
       ps: 10,
       formValidate: {
-        name: '',
-        kind: [],
-        node_kind: '',
-        gateway: '',
-        desc: '',
-        agreement: '',
-        format: ''
+        product_name: '',
+        product_type: [],
+        product_ntype: '',
+        is_access_gateway: '',
+        product_netmodel: '',
+        product_dataformat: '',
+        product_description: ''
       },
       ruleValidate: {
-        name: [
+        product_name: [
           { required: true, message: '产品名称为必填项', trigger: 'blur' }
         ],
-        kind: [
-          { required: true, message: '请选择产品所属分类', trigger: '' }
-        ],
-        node_kind: [
+        product_ntype: [
           { required: true, message: '请选择产品节点类型', trigger: 'change' }
         ],
-        gateway: [
+        is_access_gateway: [
           { required: true, message: '请选择产品是否接入网关', trigger: 'change' }
         ],
-        agreement: [
+        product_netmodel: [
           { required: true, message: '请选择产品联网协议', trigger: 'blur' }
         ],
-        format: [
+        product_dataformat: [
           { required: true, message: '请选择产品数据格式', trigger: 'blur' }
         ]
       },
@@ -308,18 +313,8 @@ export default {
           label: '智慧园区'
         }
       ],
-      sel: {
-        name: '嵊州地磁',
-        kind: ['智慧城市', '公共服务', '地磁检测器'],
-        node_kind: '设备',
-        gateway: '是',
-        desc: '123',
-        agreement: 'CoAP',
-        format: 'ICA',
-        time: '2019-07-23',
-        status: '开发中',
-        num: 1000
-      },
+      sel: {},
+      sel_delete: {},
       is_auth_code: false,
       auth_code: {
         code: ''
@@ -335,13 +330,27 @@ export default {
     }
   },
   methods: {
+    // 获取产品列表
+    get_product_list () {
+      this.loading = true
+      let params = {
+        currentPage: this.page_index,
+        pageSize: this.ps
+      }
+      if (this.searchValue) {
+        params.productName = this.searchValue
+      }
+      getProductList(params).then(res => {
+        console.log(res)
+        if (res.status === 200) {
+          this.tableData = res.data.data.records
+          this.total_ps = res.data.data.total
+        }
+        this.loading = false
+      })
+    },
     handleDelete (params) {
       console.log(params)
-    },
-    exportExcel () {
-      this.$refs.tables.exportCsv({
-        filename: `table-${(new Date()).valueOf()}.csv`
-      })
     },
     // 搜索
     handleSearch () {
@@ -352,25 +361,33 @@ export default {
       this.text_header = '新建产品'
       this.is_add_show = false
       this.formValidate = {
-        name: '',
-        kind: [],
-        node_kind: '',
-        gateway: '',
-        desc: '',
-        agreement: '',
-        format: ''
+        product_name: '',
+        product_type: [],
+        product_ntype: '',
+        is_access_gateway: '',
+        product_netmodel: '',
+        product_dataformat: '',
+        product_description: ''
       }
     },
-    // 查看功能
+    // 查看产品详情
     show (index) {
       console.log(index)
       this.is_detail_show = false
       this.is_editor = true
+      this.sel = this.tableData[index]
     },
     // 表格内删除
     remove (index) {
       console.log(index)
-      this.is_auth_code = true
+      if (this.tableData[index].deviceCount > 0) {
+        this.$Notice.error({
+          title: '该产品下有设备,不允许删除！'
+        })
+      } else {
+        this.sel_delete = this.tableData[index]
+        this.is_auth_code = true
+      }
     },
     // 换页
     handlepage (val) {
@@ -402,20 +419,41 @@ export default {
         console.log(valid)
         if (valid) {
           console.log(this.formValidate)
+          this.formValidate.product_type = this.formValidate.product_type.join(',')
           if (this.is_editor) {
-            this.$Message.success({
-              content: '添加产品成功！',
-              top: 100
+            updateProduct(this.formValidate).then(res => {
+              console.log(res)
+              if (res.data.data) {
+                this.$Message.success({
+                  content: '修改产品成功！',
+                  top: 100
+                })
+                this.is_add_show = true
+                this.get_product_list()
+              }
             })
           } else {
-            this.$Message.success({
-              content: '修改产品成功！',
-              top: 100
+            addProduct(this.formValidate).then(res => {
+              console.log(res)
+              if (res.data.data) {
+                this.$Message.success({
+                  content: '添加产品成功！',
+                  top: 100
+                })
+                this.is_add_show = true
+                this.formValidate = {}
+                this.get_product_list()
+              } else {
+                this.$Message.error({
+                  content: '添加产品失败！',
+                  top: 100
+                })
+              }
             })
           }
         } else {
-          this.$Message.success({
-            content: '添加产品成功！',
+          this.$Message.error({
+            content: '有必填选项空白！',
             top: 100
           })
         }
@@ -432,6 +470,8 @@ export default {
       this.is_detail_show = true
       this.is_editor = true
       this.formValidate = this.sel
+      console.log(this.formValidate)
+      this.formValidate.product_type = this.formValidate.product_type.split(',')
     },
     // 获取验证码
     get_code () {
@@ -457,9 +497,19 @@ export default {
         if (valid) {
           this.code_text = '点击获取'
           this.is_auth_code = false
-          this.$Message.success({
-            content: '删除产品成功！',
-            top: 100
+          deleteProduct(this.sel_delete.product_id).then(res => {
+            if (res.data.data) {
+              this.$Message.success({
+                content: '删除产品成功！',
+                top: 100
+              })
+              this.get_product_list()
+            } else {
+              this.$Message.error({
+                content: '删除产品失败！',
+                top: 100
+              })
+            }
           })
         } else {
           this.is_auth_code = true
@@ -475,9 +525,7 @@ export default {
     }
   },
   mounted () {
-    getTableData().then(res => {
-      this.tableData = res.data
-    })
+    this.get_product_list()
   }
 }
 </script>
