@@ -23,9 +23,10 @@ export const login = ({ userName, password }) => {
 //   })
 // }
 
-export const getUserInfo = () => {
+export const getUserInfo = (params) => {
   return axios.request({
     url: '/sys/user/currentUser',
+    params,
     method: 'get'
   })
 }
