@@ -242,7 +242,7 @@ export default {
           this.tableData = res.data.data.records
           this.total_ps = res.data.data.total
         } else {
-          this.$Message.error(res.data.message)
+          this.error_msg(res.data.message)
         }
         this.loading = false
       })
@@ -256,14 +256,7 @@ export default {
     handleAdd () {
       this.is_add_show = false
       this.text_header = '新建账户'
-      this.formValidate = {
-        login_name: '',
-        user_name: '',
-        user_phone: '',
-        org_id: '',
-        role_id: '',
-        user_state: 0
-      }
+      this.formValidate = {}
     },
     // 表格内账号启用开关
     switch_change (params, val) {
@@ -272,17 +265,11 @@ export default {
         user_state: val
       }
       lockUser(data).then(res => {
-        console.log(res)
         if (res.data) {
-          this.$Message.success({
-            content: '操作成功！',
-            top: 100
-          })
+          this.success_msg('操作成功！')
         } else {
-          this.$Message.error({
-            content: '操作失败！',
-            top: 100
-          })
+          this.error_msg('操作失败！')
+          this.get_list()
         }
       })
     },
@@ -297,16 +284,10 @@ export default {
     remove (index) {
       deleteUser(this.tableData[index].user_id).then(res => {
         if (res.status === 200) {
-          this.$Message.success({
-            content: '删除账户成功！',
-            top: 100
-          })
+          this.success_msg('删除账户成功！')
           this.get_list()
         } else {
-          this.$Message.error({
-            content: '删除账户失败！',
-            top: 100
-          })
+          this.error_msg('删除账户失败！')
         }
       })
     },
@@ -340,36 +321,32 @@ export default {
     // 新建或者编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
-        console.log(this.is_editor)
         if (valid) {
-          console.log(this.formValidate)
           this.formValidate.user_state = this.formValidate.user_state * 1
           if (!this.is_editor) {
             addUser(this.formValidate).then(res => {
-              console.log(res)
-              this.$Message.success({
-                content: '添加账号成功！',
-                top: 100
-              })
-              this.is_add_show = true
-              this.get_list()
+              if (res.data.data) {
+                this.success_msg('添加账号成功！')
+                this.is_add_show = true
+                this.get_list()
+              } else {
+                this.error_msg('添加账号失败！')
+              }
             })
           } else {
             updateUser(this.formValidate).then(res => {
               console.log(res)
-              this.$Message.success({
-                content: '修改账户成功！',
-                top: 100
-              })
-              this.is_add_show = true
-              this.get_list()
+              if (res.data.status === '200') {
+                this.success_msg('修改账户成功！')
+                this.is_add_show = true
+                this.get_list()
+              } else {
+                this.error_msg('修改账户失败！')
+              }
             })
           }
         } else {
-          this.$Message.error({
-            content: '必填选项不能为空！',
-            top: 100
-          })
+          this.error_msg('必填选项不能为空！')
         }
       })
     },
@@ -392,14 +369,14 @@ export default {
       if (res.status === 200) {
         this.roleList = res.data.data
       } else {
-        this.$Message.error(res.data.message)
+        this.error_msg(res.data.message)
       }
     })
     getOrgList().then(res => {
       if (res.status === 200) {
         this.enterpriseList = res.data.data
       } else {
-        this.$Message.error(res.data.message)
+        this.error_msg(res.data.message)
       }
     })
   }

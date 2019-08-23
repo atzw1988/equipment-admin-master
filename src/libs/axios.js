@@ -1,16 +1,20 @@
 import axios from 'axios'
-import store from '@/store'
+// import store from '@/store'
+import {
+  setToken,
+  getToken
+} from '@/libs/util'
 // import { Spin } from 'iview'
-const addErrorLog = errorInfo => {
-  const { statusText, status, request: { responseURL } } = errorInfo
-  let info = {
-    type: 'ajax',
-    code: status,
-    mes: statusText,
-    url: responseURL
-  }
-  if (!responseURL.includes('save_error_logger')) store.dispatch('addErrorLog', info)
-}
+// const addErrorLog = errorInfo => {
+//   const { statusText, status, request: { responseURL } } = errorInfo
+//   let info = {
+//     type: 'ajax',
+//     code: status,
+//     mes: statusText,
+//     url: responseURL
+//   }
+//   if (!responseURL.includes('save_error_logger')) store.dispatch('addErrorLog', info)
+// }
 
 class HttpRequest {
   constructor (baseUrl = baseURL) {
@@ -21,7 +25,6 @@ class HttpRequest {
     const config = {
       baseURL: this.baseUrl,
       headers: {
-        //
       }
     }
     return config
@@ -36,6 +39,9 @@ class HttpRequest {
     // 请求拦截
     instance.interceptors.request.use(config => {
       // 添加全局的loading...
+      if (getToken()) {
+        config.headers.Authorization = getToken()
+      }
       if (!Object.keys(this.queue).length) {
         // Spin.show() // 不建议开启，因为界面不友好
       }
@@ -46,9 +52,14 @@ class HttpRequest {
     })
     // 响应拦截
     instance.interceptors.response.use(res => {
+      const token = res.headers.authorization
+      console.log(token)
+      if (token) {
+        setToken(token)
+      }
       this.destroy(url)
-      const { data, status } = res
-      return { data, status }
+      const { headers, data, status } = res
+      return { headers, data, status }
     }, error => {
       this.destroy(url)
       let errorInfo = error.response
@@ -60,7 +71,7 @@ class HttpRequest {
           request: { responseURL: config.url }
         }
       }
-      addErrorLog(errorInfo)
+      // addErrorLog(errorInfo)
       return Promise.reject(error)
     })
   }

@@ -208,10 +208,30 @@ export default [
     ]
   },
   {
+    path: '/auditmana',
+    name: 'auditmana',
+    meta: {
+      icon: 'md-print',
+      title: '审核管理'
+    },
+    component: Main,
+    children: [
+      {
+        path: 'productaudit_page',
+        name: 'productaudit_page',
+        meta: {
+          icon: 'md-done-all',
+          title: '产品审核'
+        },
+        component: () => import('@/view/auditmana/productaudit/productaudit.vue')
+      }
+    ]
+  },
+  {
     path: '/permissions',
     name: 'permissions',
     meta: {
-      icon: 'md-cog',
+      icon: 'md-key',
       title: '权限管理'
     },
     component: Main,

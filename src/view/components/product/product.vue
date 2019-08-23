@@ -230,7 +230,7 @@ export default {
       tableData: [],
       loading: false,
       searchValue: '',
-      total_ps: 40,
+      total_ps: 0,
       page_index: 1,
       ps: 10,
       formValidate: {
@@ -341,10 +341,11 @@ export default {
         params.productName = this.searchValue
       }
       getProductList(params).then(res => {
-        console.log(res)
         if (res.status === 200) {
           this.tableData = res.data.data.records
           this.total_ps = res.data.data.total
+        } else {
+          this.error_msg('获取产品列表失败！')
         }
         this.loading = false
       })
@@ -360,15 +361,7 @@ export default {
     handleAdd () {
       this.text_header = '新建产品'
       this.is_add_show = false
-      this.formValidate = {
-        product_name: '',
-        product_type: [],
-        product_ntype: '',
-        is_access_gateway: '',
-        product_netmodel: '',
-        product_dataformat: '',
-        product_description: ''
-      }
+      this.formValidate = {}
     },
     // 查看产品详情
     show (index) {
@@ -381,21 +374,22 @@ export default {
     remove (index) {
       console.log(index)
       if (this.tableData[index].deviceCount > 0) {
-        this.$Notice.error({
-          title: '该产品下有设备,不允许删除！'
-        })
+        this.notice_error_msg('该产品下有设备,不允许删除！')
       } else {
         this.sel_delete = this.tableData[index]
         this.is_auth_code = true
       }
     },
     // 换页
-    handlepage (val) {
-      console.log(val)
+    handlepage (num) {
+      this.page_index = num
+      this.get_product_list()
     },
     // 修改每页条数
-    handlepagesize (val) {
-      console.log(val)
+    handlepagesize (num) {
+      this.page_index = 1
+      this.ps = num
+      this.get_product_list()
     },
     // 关闭新建、编辑页面
     close () {
@@ -424,38 +418,25 @@ export default {
             updateProduct(this.formValidate).then(res => {
               console.log(res)
               if (res.data.data) {
-                this.$Message.success({
-                  content: '修改产品成功！',
-                  top: 100
-                })
+                this.success_msg('修改产品成功！')
                 this.is_add_show = true
                 this.get_product_list()
               }
             })
           } else {
             addProduct(this.formValidate).then(res => {
-              console.log(res)
               if (res.data.data) {
-                this.$Message.success({
-                  content: '添加产品成功！',
-                  top: 100
-                })
+                this.success_msg('添加产品成功！')
                 this.is_add_show = true
                 this.formValidate = {}
                 this.get_product_list()
               } else {
-                this.$Message.error({
-                  content: '添加产品失败！',
-                  top: 100
-                })
+                this.error_msg('添加产品失败！')
               }
             })
           }
         } else {
-          this.$Message.error({
-            content: '有必填选项空白！',
-            top: 100
-          })
+          this.error_msg('有必填选项空白！')
         }
       })
     },
@@ -470,7 +451,6 @@ export default {
       this.is_detail_show = true
       this.is_editor = true
       this.formValidate = this.sel
-      console.log(this.formValidate)
       this.formValidate.product_type = this.formValidate.product_type.split(',')
     },
     // 获取验证码
@@ -493,27 +473,20 @@ export default {
     submitCode (val) {
       clearInterval(this.code_time)
       this.$refs[val].validate((valid) => {
-        console.log(valid)
         if (valid) {
           this.code_text = '点击获取'
           this.is_auth_code = false
           deleteProduct(this.sel_delete.product_id).then(res => {
             if (res.data.data) {
-              this.$Message.success({
-                content: '删除产品成功！',
-                top: 100
-              })
+              this.success_msg('删除产品成功！')
               this.get_product_list()
             } else {
-              this.$Message.error({
-                content: '删除产品失败！',
-                top: 100
-              })
+              this.error_msg('删除产品失败！')
             }
           })
         } else {
           this.is_auth_code = true
-          this.$Message.error('验证码不能为空')
+          this.error_msg('验证码不能为空')
         }
       })
     },

@@ -3,7 +3,7 @@
     <Card v-if="is_add_show && is_detail_show">
       <div class="search-con search-con-top">
         <Select v-model="sel_product" clearable style="width:150px" placeholder="全部产品">
-          <Option v-for="item in productList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+          <Option v-for="item in eq_kind" :value="item.product_id" :key="item.value">{{item.product_name}}</Option>
         </Select>&nbsp;
         <Select v-model="sel_operator" clearable style="width:150px" placeholder="全部运营商">
           <Option v-for="item in operatorList" :value="item.value" :key="item.value">{{ item.label }}</Option>
@@ -291,6 +291,9 @@ export default {
         currentPage: this.eq_page_index,
         pageSize: this.eq_ps
       }
+      if (this.searchValue) {
+        params.device_name = this.searchValue
+      }
       getEquipmentList(params).then(res => {
         if (res.status === 200) {
           this.eq_total = res.data.data.countInfo.allcount
@@ -330,6 +333,7 @@ export default {
     // 搜索
     handleSearch () {
       console.log('搜索')
+      this.get_eq_list()
     },
     // 表单内选择
     table_sel (val) {
@@ -340,16 +344,6 @@ export default {
       this.text_header = '新建设备'
       this.is_add_show = false
       this.formValidate = {}
-      getAllProduct().then(res => {
-        console.log(res)
-        if (res.data.status === 1) {
-          this.eq_kind = res.data.data
-        } else {
-          this.$Notice.error({
-            title: '产品列表获取失败，请刷新页面！'
-          })
-        }
-      })
     },
     // 批量删除
     handleDel () {
@@ -407,7 +401,6 @@ export default {
     },
     // 表格内删除
     remove (index) {
-      console.log(index)
       deleteEquipment(this.eq_list[index].device_id).then(res => {
         console.log(res)
         if (res.status === 200) {
@@ -434,10 +427,14 @@ export default {
     // 换页
     handlepage (val) {
       console.log(val)
+      this.eq_page_index = val
+      this.get_eq_list()
     },
     // 改变每页条数
     handlepagesize (val) {
-      console.log(val)
+      this.eq_ps = val
+      this.eq_page_index = 1
+      this.get_eq_list()
     },
     // 监听设备选择运营商类型
     check_eq_kind (val) {
@@ -572,6 +569,15 @@ export default {
     if (this.$route.params.id) {
       this.is_detail_show = false
     }
+    getAllProduct().then(res => {
+      if (res.data.status === 1) {
+        this.eq_kind = res.data.data
+      } else {
+        this.$Notice.error({
+          title: '产品列表获取失败，请刷新页面！'
+        })
+      }
+    })
   }
 }
 </script>

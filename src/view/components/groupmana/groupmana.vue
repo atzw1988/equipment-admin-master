@@ -7,18 +7,18 @@
         <Button @click="handleSearch" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
         <Button @click="handleAdd" class="add-btn" type="success"><Icon type="search"/>&nbsp;创建分组&nbsp;</Button>
       </div>
-      <Table border :columns="columns" :data="tableData"></Table>
+      <Table :loading='loading' border :columns="columns" :data="group_list"></Table>
       <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
       <div class="header">{{text_header}}</div>
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
-        <FormItem label="分组名称" prop="name">
-          <Input v-model="formValidate.name" placeholder="请输入分组名称" clearable></Input>
+        <FormItem label="分组名称" prop="group_name">
+          <Input v-model="formValidate.group_name" placeholder="请输入分组名称" clearable></Input>
         </FormItem>
         <FormItem label="产品描述">
-          <Input v-model="formValidate.desc" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入分组描述..."></Input>
+          <Input v-model="formValidate.group_description" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入分组描述..."></Input>
         </FormItem>
         <FormItem>
           <Affix :offset-bottom="50">
@@ -30,7 +30,7 @@
     </Card>
     <Card v-if="!is_detail_show" class="detail_card">
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close_detail"/>
-      <div class="header">{{sel.name}}</div>
+      <div class="header">{{sel.group_name}}</div>
       <div class="middle">
         <span>设备总数：{{eq_total}}</span>
         <Divider type="vertical" />
@@ -45,7 +45,7 @@
             <Row class='detail'>
               <Col span="8">
                 <Col class='left detail_list last' span="12">分组名称</Col>
-                <Col class="detail_list last" span="12">{{sel.name}}</Col>
+                <Col class="detail_list last" span="12">{{sel.group_name}}</Col>
               </Col>
               <Col span="8">
                 <Col class='left detail_list last' span="12">分组ID</Col>
@@ -53,11 +53,11 @@
               </Col>
               <Col span="8">
                 <Col class='left detail_list last' span="12">添加时间</Col>
-                <Col class="right detail_list last" span="12">{{sel.time}}</Col>
+                <Col class="right detail_list last" span="12">{{sel.create_date}}</Col>
               </Col>
               <Col span="24">
                 <Col class='left detail_list' span="4">分组描述</Col>
-                <Col class="detail_list right" span="20">{{sel.desc}}</Col>
+                <Col class="detail_list right" span="20">{{sel.group_description}}</Col>
               </Col>
             </Row>
           </TabPane>
@@ -115,10 +115,9 @@
 <script>
 // import Tables from '_c/tables'
 import './groupmana.less'
-import { getGroupList } from '@/api/groupmana'
+import { getGroupList, addGroup, updateGroup, deleteGroup } from '@/api/groupmana'
 export default {
   name: 'tables_page',
-
   data () {
     return {
       sel_product: '',
@@ -137,10 +136,10 @@ export default {
       eq_online: 900,
       eq_offline: 100,
       columns: [
-        { title: '分组名称', key: 'name' },
-        { title: '分组ID', key: 'name' },
-        { title: '设备数', key: 'email' },
-        { title: '创建时间', key: 'createTime' },
+        { title: '分组名称', key: 'group_name' },
+        { title: '分组ID', key: 'group_id' },
+        { title: '设备数', key: 'deviceCount' },
+        { title: '创建时间', key: 'create_date' },
         {
           title: '操作',
           key: 'handle',
@@ -189,23 +188,25 @@ export default {
           }
         }
       ],
+      group_list: [],
       text_header: '',
       is_add_show: true,
       is_detail_show: true,
       is_editor: false,
       is_drawer_show: false,
       tableData: [],
+      loading: false,
       searchValue: '',
       total_ps: 40,
       page_index: 1,
       ps: 10,
       formValidate: {
-        name: '',
-        desc: ''
+        group_name: '',
+        group_description: ''
       },
       sel_delete: [],
       ruleValidate: {
-        name: [
+        group_name: [
           { required: true, message: '分组名称是必填选项', trigger: 'blur' }
         ]
       },
@@ -228,12 +229,7 @@ export default {
         }
       ],
       eq_kind_sel: 'CMCC',
-      sel: {
-        name: '龙岗区地磁',
-        group_id: '432432438J',
-        desc: '123456789',
-        time: '2019-07-23'
-      },
+      sel: {},
       sel_eq_name: '',
       sel_eq_imei: '',
       sel_eq_operator: '',
@@ -311,6 +307,7 @@ export default {
   methods: {
     // 获取分组列表
     get_group_list () {
+      this.loading = true
       let params = {
         currentPage: this.page_index,
         pageSize: this.ps
@@ -319,51 +316,58 @@ export default {
         params.group_name = this.searchValue
       }
       getGroupList(params).then(res => {
-        console.log(res)
-      })
-    },
-    handleDelete (params) {
-      console.log(params)
-    },
-    exportExcel () {
-      this.$refs.tables.exportCsv({
-        filename: `table-${(new Date()).valueOf()}.csv`
+        if (res.data.status === 1) {
+          this.total_ps = res.data.data.total
+          this.group_list = res.data.data.records
+        }
+        this.loading = false
       })
     },
     // 分组搜索
     handleSearch () {
-      console.log('搜索')
+      this.get_group_list()
     },
     // 新建分组
     handleAdd () {
       this.text_header = '新建分组'
       this.is_add_show = false
-      this.formValidate = {
-        name: '',
-        desc: ''
-      }
+      this.formValidate = {}
     },
     // 查看分组详情
     show (index) {
-      console.log(index)
       this.is_detail_show = false
       this.is_editor = true
+      this.sel = this.group_list[index]
     },
     // 表格内删除
     remove (index) {
       console.log(index)
-      this.$Message.success({
-        content: '设备删除成功！',
-        top: 100
+      deleteGroup(this.group_list[index].group_id).then(res => {
+        console.log(res)
+        if (res.data.status === 1) {
+          this.$Message.success({
+            content: '分组删除成功！',
+            top: 100
+          })
+          this.get_group_list()
+        } else {
+          this.$Message.error({
+            content: '分组删除失败！',
+            top: 100
+          })
+        }
       })
     },
     // 换页
     handlepage (val) {
-      console.log(val)
+      this.page_index = val
+      this.get_group_list()
     },
     // 切换每页条数
     handlepagesize (val) {
-      console.log(val)
+      this.page_index = 1
+      this.ps = val
+      this.get_group_list()
     },
     // 关闭新建、编辑页面
     close () {
@@ -384,18 +388,39 @@ export default {
     // 新建、编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
-        console.log(valid)
         if (valid) {
-          console.log(this.formValidate)
-          if (this.is_editor) {
-            this.$Message.success({
-              content: '添加产品成功！',
-              top: 100
+          if (!this.is_editor) {
+            addGroup(this.formValidate).then(res => {
+              if (res.data.status === 1) {
+                this.$Message.success({
+                  content: '创建分组成功！',
+                  top: 100
+                })
+                this.is_add_show = true
+                this.get_group_list()
+              } else {
+                this.$Message.error({
+                  content: '创建分组失败！',
+                  top: 100
+                })
+              }
             })
           } else {
-            this.$Message.success({
-              content: '修改产品成功！',
-              top: 100
+            updateGroup(this.formValidate).then(res => {
+              console.log(res)
+              if (res.data.status === 1) {
+                this.$Message.success({
+                  content: '修改分组信息成功！',
+                  top: 100
+                })
+                this.is_add_show = true
+                this.get_group_list()
+              } else {
+                this.$Message.error({
+                  content: '修改分组信息成功！',
+                  top: 100
+                })
+              }
             })
           }
         } else {

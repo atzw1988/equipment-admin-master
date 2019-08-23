@@ -6,8 +6,8 @@ import {
   getContentByMsgId,
   hasRead,
   removeReaded,
-  restoreTrash,
-  getUnreadCount
+  restoreTrash
+  // getUnreadCount
 } from '@/api/user'
 import { setToken, getToken } from '@/libs/util'
 
@@ -81,9 +81,10 @@ export default {
           userName,
           password
         }).then(res => {
-          const data = res.data
-          commit('setToken', data.token)
-          resolve()
+          console.log(res)
+          const data = res.headers
+          commit('setToken', data.authorization)
+          resolve(res)
         }).catch(err => {
           reject(err)
         })
@@ -92,7 +93,8 @@ export default {
     // 退出登录
     handleLogOut ({ state, commit }) {
       return new Promise((resolve, reject) => {
-        logout(state.token).then(() => {
+        logout(state.token).then((res) => {
+          console.log(res)
           commit('setToken', '')
           commit('setAccess', [])
           resolve()
@@ -110,11 +112,13 @@ export default {
       return new Promise((resolve, reject) => {
         try {
           getUserInfo(state.token).then(res => {
-            const data = res.data
-            commit('setAvatar', data.avatar)
-            commit('setUserName', data.name)
+            console.log(res)
+            const data = res.data.data
+            let access = ['admin']
+            commit('setAvatar', 'https://file.iviewui.com/dist/a0e88e83800f138b94d2414621bd9704.png')
+            commit('setUserName', data.login_name)
             commit('setUserId', data.user_id)
-            commit('setAccess', data.access)
+            commit('setAccess', access)
             commit('setHasGetInfo', true)
             resolve(data)
           }).catch(err => {
@@ -128,8 +132,8 @@ export default {
     // 此方法用来获取未读消息条数，接口只返回数值，不返回消息列表
     getUnreadMessageCount ({ state, commit }) {
       getUnreadCount().then(res => {
-        const { data } = res
-        commit('setMessageCount', data)
+        // const { data } = res
+        commit('setMessageCount', '3')
       })
     },
     // 获取消息列表，其中包含未读、已读、回收站三个列表

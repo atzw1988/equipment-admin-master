@@ -1,4 +1,10 @@
 import axios from '@/libs/api.request'
+export const getProductData = () => {
+  return axios.request({
+    url: 'get_table_data',
+    method: 'get'
+  })
+}
 
 export const getTableData = () => {
   return axios.request({

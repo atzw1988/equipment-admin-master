@@ -7,7 +7,7 @@ const { title, cookieExpires, useI18n } = config
 export const TOKEN_KEY = 'token'
 
 export const setToken = (token) => {
-  Cookies.set(TOKEN_KEY, token, { expires: cookieExpires || 1 })
+  Cookies.set(TOKEN_KEY, token, { expires: cookieExpires || 0.08 })
 }
 
 export const getToken = () => {
@@ -215,6 +215,7 @@ export const canTurnTo = (name, access, routes) => {
  * @description 从URL中解析参数
  */
 export const getParams = url => {
+  console.log(url)
   const keyValueArr = url.split('?')[1].split('&')
   let paramObj = {}
   keyValueArr.forEach(item => {

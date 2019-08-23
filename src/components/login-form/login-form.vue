@@ -99,6 +99,7 @@ export default {
     refreshCode () {
       this.identifyCode = ''
       this.makeCode(this.identifyCodes, 4)
+      console.log(this.identifyCode)
     },
     // 生成随即
     randomNum (min, max) {

@@ -23,8 +23,8 @@ export default {
   },
   methods: {
     ...mapActions([
-      'handleLogin'
-      // 'getUserInfo'
+      'handleLogin',
+      'getUserInfo'
     ]),
     handleSubmit ({ userName, password }) {
       this.handleLogin({ userName, password }).then(res => {
@@ -37,9 +37,9 @@ export default {
             title: '登陆成功',
             desc: '欢迎回来'
           })
-          // this.getUserInfo().then(res => {
-          //   console.log(res)
-          // })
+          this.getUserInfo().then(res => {
+            console.log(res)
+          })
         } else {
           this.$Message.error(res.data.message)
         }

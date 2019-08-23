@@ -7,24 +7,24 @@
         <Button @click="handleSearch" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
         <Button @click="handleAdd" class="add-btn" type="success"><Icon type="search"/>&nbsp;新建机构&nbsp;</Button>
       </div>
-      <Table border :columns="columns" :data="tableData"></Table>
-      <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
+      <Table :loading='loading_org' border :columns="columns" :data="org_list"></Table>
+      <Page :total="total_ps_org" size="small" show-total show-elevator show-sizer @on-change="handlepage" @on-page-size-change='handlepagesize'/>
     </Card>
     <Card v-if="!is_add_show" class="add_card">
       <div class="header">{{text_header}}</div>
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close"/>
       <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="220">
-        <FormItem label="公司名称" prop="company">
-          <Input v-model="formValidate.company" placeholder="请输入公司名称" clearable></Input>
+        <FormItem label="公司名称" prop="org_name">
+          <Input v-model="formValidate.org_name" placeholder="请输入公司名称" clearable></Input>
         </FormItem>
-        <FormItem label="联系人" prop="name">
-          <Input v-model="formValidate.name" placeholder="请输入联系人" clearable></Input>
+        <FormItem label="联系人" prop="org_contacts">
+          <Input v-model="formValidate.org_contacts" placeholder="请输入联系人" clearable></Input>
         </FormItem>
-        <FormItem label="联系电话" prop="phone">
-          <Input v-model="formValidate.phone" placeholder="请输入联系电话" clearable></Input>
+        <FormItem label="联系电话" prop="org_phone">
+          <Input v-model="formValidate.org_phone" placeholder="请输入联系电话" clearable></Input>
         </FormItem>
         <FormItem label="公司描述">
-          <Input v-model="formValidate.desc" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入公司描述,最多100个字符..."></Input>
+          <Input v-model="formValidate.org_description" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="请输入公司描述,最多100个字符..."></Input>
         </FormItem>
         <FormItem>
           <Button type="primary" @click="handleSubmit('formValidate')">提交</Button>
@@ -45,8 +45,8 @@
         <Button @click="handleSearch_ac" class="search-btn" type="primary"><Icon type="search"/>&nbsp;搜索&nbsp;</Button>
         <Button class="edit" type="info" @click="handleeditor">编辑</Button>
       </div>
-      <tree-table expand-key="account" :expand-type="false" :selectable="false" :columns="columns_account" :data="account_data" ></tree-table>
-      <Page :total="total_ps" size="small" show-total show-elevator show-sizer @on-change="handlepage_ac" @on-page-size-change='handlepagesize_ac'/>
+      <tree-table :loading='loading_acc' expand-key="account" :expand-type="false" :selectable="false" :columns="columns_account" :data="account_data" ></tree-table>
+      <Page :total="total_ps_acc" size="small" show-total show-elevator show-sizer @on-change="handlepage_ac" @on-page-size-change='handlepagesize_ac'/>
     </Card>
   </div>
 </template>
@@ -54,18 +54,18 @@
 <script>
 // import Tables from '_c/tables'
 import './organization.less'
-import { getTableData } from '@/api/data'
+import { getOrganizationList, getOrganizationDetail, addOrganization, updateOrganization, deleteOrganization } from '@/api/organization'
 export default {
   name: 'tree_table_page',
 
   data () {
     return {
       columns: [
-        { title: '公司名称', key: 'name' },
-        { title: '联系人', key: 'email' },
-        { title: '电话', key: 'email' },
-        { title: '角色数', key: 'email' },
-        { title: '用户数', key: 'email' },
+        { title: '公司名称', key: 'org_name' },
+        { title: '联系人', key: 'org_contacts' },
+        { title: '电话', key: 'org_phone' },
+        { title: '角色数', key: 'roleCount' },
+        { title: '用户数', key: 'userCount' },
         { title: '创建时间', key: 'createTime' },
         {
           title: '操作',
@@ -115,6 +115,11 @@ export default {
           }
         }
       ],
+      org_list: [],
+      loading_org: false,
+      total_ps_org: 0,
+      page_index_org: 1,
+      ps_org: 10,
       columns_account: [
         { title: '账号', key: 'account' },
         { title: '角色', key: 'role' },
@@ -147,87 +152,104 @@ export default {
           ]
         }
       ],
+      loading_acc: false,
+      total_ps_acc: 0,
+      page_index_acc: 1,
+      ps_acc: 10,
       is_add_show: true,
       is_detail_show: true,
       is_editor: false,
       tableData: [],
       searchValue: '',
-      total_ps: 40,
-      page_index: 1,
-      ps: 10,
       text_header: '',
-      formValidate: {
-        company: '',
-        name: '',
-        phone: '',
-        desc: ''
-      },
+      formValidate: {},
       ruleValidate: {
-        company: [
+        org_name: [
           { required: true, message: '账户名称是必填选项', trigger: 'blur' }
         ],
-        name: [
+        org_contacts: [
           { required: true, message: '姓名是必填选项', trigger: 'blur' }
         ],
-        phone: [
+        org_phone: [
           { required: true, message: '联系电话是必填选项', trigger: 'blur' }
         ]
       },
-      sel: {
-        company: 'huateng',
-        name: '张三',
-        phone: '18888888888',
-        desc: '123...123',
-        kind: 1,
-        time: '2019-07-25'
-      }
+      sel: {}
     }
   },
   methods: {
-    exportExcel () {
-      this.$refs.tables.exportCsv({
-        filename: `table-${(new Date()).valueOf()}.csv`
+    // 获取组织机构列表
+    get_org_list () {
+      this.loading_org = true
+      let params = {
+        currentPage: this.page_index_org,
+        pageSize: this.ps_org
+      }
+      if (this.searchValue) {
+        params.orgName = this.searchValue
+      }
+      getOrganizationList(params).then(res => {
+        if (res.status === 200) {
+          this.total_ps_org = res.data.data.total
+          this.org_list = res.data.data.records
+        } else {
+          this.error_msg('获取组织机构列表失败！')
+        }
+        this.loading_org = false
       })
     },
     // 搜索
     handleSearch () {
-      console.log('搜索')
+      this.get_org_list()
     },
     // 新建机构
     handleAdd () {
       this.text_header = '新建组织机构'
       this.is_add_show = false
-      this.formValidate = {
-        account: '',
-        name: '',
-        phone: '',
-        enterprise: '',
-        role: '',
-        enable: '',
-        kind: 1
-      }
+      this.formValidate = {}
     },
     // 表格内查看机构详情
     show (index) {
       console.log(index)
+      this.loading_acc = true
       this.is_detail_show = false
       this.is_editor = true
+      this.sel = this.org_list[index]
+      let params = {
+        orgId: this.org_list[index].org_id
+      }
+      getOrganizationDetail(params).then(res => {
+        console.log(res)
+        this.loading_acc = false
+      })
     },
     // 表格内删除机构
     remove (index) {
       console.log(index)
+      deleteOrganization(this.org_list[index].org_id).then(res => {
+        if (res.data.data) {
+          this.success_msg('删除组织机构成功！')
+          this.get_org_list()
+        } else {
+          this.error_msg('删除组织机构失败！')
+        }
+      })
     },
     // 换页
     handlepage (val) {
       console.log(val)
+      this.page_index_org = val
+      this.get_org_list()
     },
     // 更换每页条数
     handlepagesize (val) {
       console.log(val)
+      this.page_index_org = 1
+      this.ps_org = val
+      this.get_org_list()
     },
     // 关闭新建、编辑页面
     close () {
-      console.log(this.is_editor)
       if (this.is_editor) {
         this.is_detail_show = false
         this.is_add_show = true
@@ -244,25 +266,31 @@ export default {
     // 新建、编辑表单提交
     handleSubmit (name) {
       this.$refs[name].validate((valid) => {
-        console.log(valid)
         if (valid) {
           console.log(this.formValidate)
-          if (this.is_editor) {
-            this.$Message.success({
-              content: '添加产品成功！',
-              top: 100
+          if (!this.is_editor) {
+            addOrganization(this.formValidate).then(res => {
+              if (res.status === 200) {
+                this.success_msg('新建组织机构成功！')
+                this.is_add_show = true
+                this.get_org_list()
+              } else {
+                this.error_msg('新建组织机构失败！')
+              }
             })
           } else {
-            this.$Message.success({
-              content: '修改产品成功！',
-              top: 100
+            updateOrganization(this.formValidate).then(res => {
+              if (res.status === 200) {
+                this.success_msg('修改组织机构成功！')
+                this.is_add_show = true
+                this.get_org_list()
+              } else {
+                this.error_msg('修改组织机构失败！')
+              }
             })
           }
         } else {
-          this.$Message.error({
-            content: '必填选项不能为空！',
-            top: 100
-          })
+          this.error_msg('必填选项不能为空！')
         }
       })
     },
@@ -285,16 +313,17 @@ export default {
     // 组织机构详情页内换页
     handlepage_ac (val) {
       console.log(val)
+      this.page_index_acc = val
     },
     // 组织机构详情页更换每页条数
     handlepagesize_ac (val) {
       console.log(val)
+      this.page_index_acc = 1
+      this.ps_acc = val
     }
   },
   mounted () {
-    getTableData().then(res => {
-      this.tableData = res.data
-    })
+    this.get_org_list()
   }
 }
 </script>

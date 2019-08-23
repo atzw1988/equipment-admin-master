@@ -101,8 +101,8 @@ export default {
       ctx.rotate(-deg * Math.PI / 180)
       ctx.translate(-x, -y)
     },
+    // 绘制干扰线
     drawLine (ctx) {
-      // 绘制干扰线
       for (let i = 0; i < 8; i++) {
         ctx.strokeStyle = this.randomColor(this.lineColorMin, this.lineColorMax)
         ctx.beginPath()
@@ -111,8 +111,8 @@ export default {
         ctx.stroke()
       }
     },
+    // 绘制干扰点
     drawDot (ctx) {
-      // 绘制干扰点
       for (let i = 0; i < 100; i++) {
         ctx.fillStyle = this.randomColor(0, 255)
         ctx.beginPath()

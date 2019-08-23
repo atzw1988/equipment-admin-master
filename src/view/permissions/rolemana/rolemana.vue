@@ -337,9 +337,7 @@ export default {
           this.total_ps = res.data.data.total
         } else {
           this.role_list = []
-          this.$Notice.error({
-            title: '获取列表失败！'
-          })
+          this.error_msg('获取列表失败！')
         }
       })
     },
@@ -392,9 +390,7 @@ export default {
           console.log(this.formValidate)
           this.mod_list = list
         } else {
-          this.$Notice.error({
-            title: '获取模块列表失败！'
-          })
+          this.notice_error_msg('获取模块列表失败！')
         }
       })
     },
@@ -422,23 +418,23 @@ export default {
       deleteRole(this.role_list[index].role_id).then(res => {
         console.log(res)
         if (res.status === 200) {
-          this.$Message.success({
-            content: '设备删除成功！',
-            top: 100
-          })
+          this.success_msg('角色删除成功！')
+          this.get_role_list()
         } else {
-          this.$Message.error({
-            content: '设备删除失败！',
-            top: 100
-          })
+          this.error_msg('角色删除失败！')
         }
       })
     },
     handlepage (val) {
       console.log(val)
+      this.page_index = val
+      this.get_role_list()
     },
     handlepagesize (val) {
       console.log(val)
+      this.page_index = 1
+      this.ps = val
+      this.get_role_list()
     },
     check_eq_kind (val) {
       console.log(val)
@@ -496,22 +492,13 @@ export default {
         console.log(valid)
         if (valid) {
           console.log(this.formValidate)
-          if (this.is_editor) {
-            this.$Message.success({
-              content: '添加产品成功！',
-              top: 100
-            })
+          if (!this.is_editor) {
+            this.success_msg('添加角色成功！')
           } else {
-            this.$Message.success({
-              content: '修改产品成功！',
-              top: 100
-            })
+            this.error_msg('修改角色成功！')
           }
         } else {
-          this.$Message.error({
-            content: '必填选项不能为空！',
-            top: 100
-          })
+          this.error_msg('必填选项不能为空！')
         }
       })
     },
