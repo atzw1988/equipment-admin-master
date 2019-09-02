@@ -22,10 +22,7 @@ export const deleteEquipment = (id) => {
   })
 }
 
-export const getEquipmentdetail = (id) => {
-  const params = {
-    deviceId: id
-  }
+export const getEquipmentdetail = (params) => {
   return axios.request({
     url: '/manage/device/findData',
     params,

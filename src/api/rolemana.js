@@ -38,6 +38,14 @@ export const addRole = (data) => {
   })
 }
 
+export const updateRole = (data) => {
+  return axios.request({
+    url: '/sys/role/updateRole',
+    data,
+    method: 'post'
+  })
+}
+
 export const getModuleList = () => {
   return axios.request({
     url: '/sys/modules/findAllList',

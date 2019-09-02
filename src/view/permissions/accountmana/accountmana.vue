@@ -234,7 +234,7 @@ export default {
         pageSize: this.ps
       }
       if (this.searchValue) {
-        params.login_name = this.searchValue
+        params.loginName = this.searchValue
       }
       getUserList(params).then(res => {
         console.log(res)

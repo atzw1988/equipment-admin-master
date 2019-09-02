@@ -29,3 +29,34 @@ export const updateGroup = (data) => {
     method: 'post'
   })
 }
+
+export const getGroupEqList = (params) => {
+  return axios.request({
+    url: '/manage/group/getGroupDevice',
+    params,
+    method: 'get'
+  })
+}
+
+export const getUngroupEqList = (params) => {
+  return axios.request({
+    url: '/manage/group/getUnGrouped',
+    params,
+    method: 'get'
+  })
+}
+
+export const addGroupEq = (data) => {
+  return axios.request({
+    url: '/manage/group/addGroupDevice',
+    data,
+    method: 'post'
+  })
+}
+
+export const deleteGroupEq = (gid, id) => {
+  return axios.request({
+    url: '/manage/group/del/dev/' + gid + '/' + id,
+    method: 'delete'
+  })
+}

@@ -92,7 +92,8 @@
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">节点类型</Col>
-            <Col class="detail_list" span="12">{{sel.product_ntype}}</Col>
+            <Col v-if="sel.product_ntype == 1" class="detail_list" span="12">设备</Col>
+            <Col v-if="sel.product_ntype == 2" class="detail_list" span="12">网关</Col>
           </Col>
           <Col span="16">
             <Col class='left detail_list' span="6">数据格式</Col>
@@ -101,11 +102,12 @@
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">状态</Col>
-            <Col class="detail_list" span="12">{{sel.product_state}}</Col>
+            <Col class="detail_list" span="12">{{sel.product_state_name}}</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">是否接入网关</Col>
-            <Col class="detail_list" span="12">{{sel.is_access_gateway}}</Col>
+            <Col v-if="sel.is_access_gateway == 1" class="detail_list" span="12">是</Col>
+            <Col v-if="sel.is_access_gateway == 2" class="detail_list" span="12">否</Col>
           </Col>
           <Col span="8">
             <Col class='left detail_list' span="12">联网协议</Col>
@@ -174,6 +176,7 @@ export default {
         { title: '产品ID', key: 'product_id' },
         { title: '节点类型', key: 'product_ntype' },
         { title: '设备数', key: 'deviceCount' },
+        { title: '审核状态', key: 'product_state_name' },
         { title: '创建时间', key: 'create_date' },
         {
           title: '操作',
@@ -341,8 +344,18 @@ export default {
         params.productName = this.searchValue
       }
       getProductList(params).then(res => {
+        console.log(res)
         if (res.status === 200) {
-          this.tableData = res.data.data.records
+          let list = res.data.data.records
+          list.forEach(item => {
+            if (item.product_state === 1) {
+              item.product_state_name = '审核通过'
+            } else {
+              item.product_state_name = '审核中'
+            }
+            item.is_access_gateway += ''
+          })
+          this.tableData = list
           this.total_ps = res.data.data.total
         } else {
           this.error_msg('获取产品列表失败！')
@@ -350,12 +363,10 @@ export default {
         this.loading = false
       })
     },
-    handleDelete (params) {
-      console.log(params)
-    },
     // 搜索
     handleSearch () {
       console.log('搜索')
+      this.get_product_list()
     },
     // 新建按钮
     handleAdd () {
@@ -368,6 +379,7 @@ export default {
       console.log(index)
       this.is_detail_show = false
       this.is_editor = true
+      console.log()
       this.sel = this.tableData[index]
     },
     // 表格内删除
@@ -397,6 +409,7 @@ export default {
       if (this.is_editor) {
         this.is_detail_show = false
         this.is_add_show = true
+        this.formValidate.product_type = this.formValidate.product_type.join(',')
       } else {
         this.is_add_show = true
         this.is_detail_show = true

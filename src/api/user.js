@@ -23,10 +23,9 @@ export const login = ({ userName, password }) => {
 //   })
 // }
 
-export const getUserInfo = (params) => {
+export const getUserInfo = () => {
   return axios.request({
     url: '/sys/user/currentUser',
-    params,
     method: 'get'
   })
 }
@@ -39,6 +38,13 @@ export const getUserInfo = (params) => {
 //     method: 'get'
 //   })
 // }
+export const getUserAccess = (params) => {
+  return axios.request({
+    url: '/sys/modules/getModules',
+    params,
+    method: 'get'
+  })
+}
 
 export const logout = (token) => {
   return axios.request({

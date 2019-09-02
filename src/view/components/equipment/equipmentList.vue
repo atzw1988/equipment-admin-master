@@ -33,14 +33,14 @@
         <FormItem label="" prop="device_type" class="check_my">
           <RadioGroup v-model="formValidate.device_type" @on-change='check_eq_kind'>
             <Radio label="1">
-              <div class="check_kind" :class="formValidate.device_type == '移动设备'? 'active' : ''">
+              <div class="check_kind" :class="formValidate.device_type == '1'? 'active' : ''">
                 <img src="../../../assets/images/yidonglogo.png" alt="" class="logo">
                 <span class="name">中国移动</span>
                 <div class="describe">describe</div>
               </div>
             </Radio>
             <Radio label="0">
-              <div class="check_kind" :class="formValidate.device_type == '电信设备'? 'active' : ''">
+              <div class="check_kind" :class="formValidate.device_type == '0'? 'active' : ''">
                 <img src="../../../assets/images/zhongguodianxin.png" alt="" class="logo">
                 <span class="name">中国电信</span>
                 <div class="describe">describe</div>
@@ -60,8 +60,8 @@
         <FormItem label="IMSI" prop="device_imsi" v-if="formValidate.device_type == '1'">
           <Input v-model="formValidate.device_imsi" placeholder="请输入设备IMSI号" clearable></Input>
         </FormItem>
-        <FormItem label="产品名称">
-          <Input v-model="formValidate.product_name" placeholder="请输入产品名称" clearable></Input>
+        <FormItem label="设备名称">
+          <Input v-model="formValidate.device_name" placeholder="请输入设备名称" clearable></Input>
         </FormItem>
         <FormItem>
           <Button type="primary" @click="handleSubmit('formValidate')">提交</Button>
@@ -71,9 +71,9 @@
     </Card>
     <Card v-if="!is_detail_show" class="detail_card">
       <Icon class="close_add" type="md-close-circle" size='24' @click.stop="close_detail"/>
-      <div class="header">{{sel.name}}</div>
+      <div class="header">{{sel.device_name}}</div>
       <div class="middle">
-        <span style="margin-right:50px">归属产品：{{sel.name}}&nbsp;&nbsp;<Icon type="md-eye" size='24'/></span>
+        <span style="margin-right:50px">归属产品：{{sel.product_name}}&nbsp;&nbsp;<Icon type="md-eye" size='24'/></span>
       </div>
       <div class="down">
         <Tabs type="card" @on-click="get_eq_data">
@@ -86,7 +86,7 @@
               </Col>
               <Col span="8">
                 <Col class='left detail_list last' span="12">归属产品</Col>
-                <Col class="detail_list last" span="12">{{sel.device_name}}</Col>
+                <Col class="detail_list last" span="12">{{sel.product_name}}</Col>
               </Col>
               <Col span="8">
                 <Col class='left detail_list last' span="12">添加时间</Col>
@@ -94,12 +94,12 @@
               </Col>
               <Col span="8">
                 <Col class='left detail_list' span="12">归属运营商</Col>
-                <Col class="detail_list" span="12">{{sel.device_type}}</Col>
+                <Col class="detail_list" span="12">{{sel.device_type_name}}</Col>
               </Col>
               <Col span="8">
                 <Col class='left detail_list' span="12">状态</Col>
-                <Col v-if="sel.device_state == '在线'" class="detail_list" span="12"><Badge status="success" />在线</Col>
-                <Col v-if="sel.device_state == '离线'" class="detail_list" span="12"><Badge status="error" />离线</Col>
+                <Col v-if="sel.device_state == '1'" class="detail_list" span="12"><Badge status="success" />在线</Col>
+                <Col v-if="sel.device_state == '0'" class="detail_list" span="12"><Badge status="error" />离线</Col>
               </Col>
               <Col span="8">
                 <Col class='left detail_list' span="12">最近更改时间</Col>
@@ -122,13 +122,22 @@
           </TabPane>
           <TabPane label="设备数据">
             <div class="eq_data">
-              <DatePicker value='yyyy年MM月dd日' v-model="time_interval" split-panels class="time_inta" type="daterange" placement="bottom-start" placeholder="请选择时间范围" style="width: 200px"></DatePicker>
+              <DatePicker
+                @on-change='check_time'
+                :options='time_options'
+                split-panels
+                class="time_inta"
+                type="datetimerange"
+                placement="bottom-start"
+                placeholder="请选择时间范围"
+                style="width: 300px">
+              </DatePicker>
               <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
               <Button @click="handleExport_eq" class="export-btn" type="info">&nbsp;导出&nbsp;</Button>
             </div>
             <div>
               <Table border :loading="detail_loading" :columns="detail_columns" :data="eq_detail_list"></Table>
-              <Page :total="total_ps" size="small" transfer show-total show-elevator show-sizer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
+              <Page :total="de_total_ps" size="small" transfer show-total show-elevator show-sizer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
             </div>
           </TabPane>
         </Tabs>
@@ -162,18 +171,14 @@
 <script>
 // import Tables from '_c/tables'
 import './equipmentList.less'
-import { getEquipmentList, getEquipmentdetail, deleteEquipment, getAllProduct, addEquipment } from '@/api/equipment'
+import { getEquipmentList, getEquipmentdetail, deleteEquipment, getAllProduct, addEquipment, updataEquipment } from '@/api/equipment'
 export default {
   name: 'tables_page',
 
   data () {
     return {
       sel_product: '',
-      productList: [
-        { value: 'one', label: '产品1' },
-        { value: 'two', label: '产品2' },
-        { value: 'three', label: '产品3' }
-      ],
+      productList: [],
       sel_operator: '',
       operatorList: [
         { value: 'one', label: '中国移动' },
@@ -187,9 +192,9 @@ export default {
         { type: 'selection', width: 60, align: 'center' },
         { title: '设备名称', key: 'device_name' },
         { title: 'IMEI', key: 'device_imei' },
-        { title: '运营商', key: 'device_type' },
+        { title: '运营商', key: 'device_type_name' },
         { title: '归属产品', key: 'product_name' },
-        { title: '设备状态', key: 'device_state' },
+        { title: '设备状态', key: 'device_state_name' },
         { title: '添加时间', key: 'create_date' },
         {
           title: '操作',
@@ -251,9 +256,9 @@ export default {
       eq_detail_list: [],
       detail_loading: false,
       searchValue: '',
-      total_ps: 40,
-      page_index: 1,
-      ps: 10,
+      de_total_ps: 40,
+      de_page_index: 1,
+      de_ps: 10,
       formValidate: {},
       sel_delete: [],
       ruleValidate: {
@@ -274,6 +279,37 @@ export default {
       eq_kind_sel: 'CMCC',
       sel: {},
       time_interval: '',
+      time_options: {
+        shortcuts: [
+          {
+            text: '最近一周',
+            value () {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+              return [start, end]
+            }
+          },
+          {
+            text: '最近一个月',
+            value () {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+              return [start, end]
+            }
+          },
+          {
+            text: '最近三个月',
+            value () {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
+              return [start, end]
+            }
+          }
+        ]
+      },
       detail_columns: [
         { title: '时间', key: 'inf_addtime' },
         { title: '信息', key: 'inf_data' }
@@ -302,14 +338,16 @@ export default {
           this.eq_list = res.data.data.pageInfo.records
           this.eq_list.forEach(item => {
             if (item.device_type === 1) {
-              item.device_type = '移动设备'
+              item.device_type_name = '移动设备'
+              item.device_type = '1'
             } else if (item.device_type === 0) {
-              item.device_type = '电信设备'
+              item.device_type_name = '电信设备'
+              item.device_type = '0'
             }
             if (item.device_state === 1) {
-              item.device_state = '在线'
+              item.device_state_name = '在线'
             } else {
-              item.device_state = '离线'
+              item.device_state_name = '离线'
             }
           })
           this.eq_total_ps = res.data.data.pageInfo.total
@@ -320,6 +358,31 @@ export default {
           })
         }
         this.list_loading = false
+      })
+    },
+    // 获取设备数据
+    get_eq_data_list () {
+      let params = {
+        deviceId: this.sel.device_id,
+        currentPage: this.de_page_index,
+        pageSize: this.de_ps
+      }
+      if (this.time_interval) {
+        params.startTime = this.time_interval[0]
+        params.endTime = this.time_interval[1]
+      }
+      getEquipmentdetail(params).then(res => {
+        console.log(res)
+        if (res.status === 200) {
+          this.eq_detail_list = res.data.data.records
+          this.de_total_ps = res.data.data.total
+        } else {
+          this.$Message.error({
+            content: '获取设备数据失败！',
+            top: 100
+          })
+        }
+        this.detail_loading = false
       })
     },
     handleDelete (params) {
@@ -405,22 +468,13 @@ export default {
         console.log(res)
         if (res.status === 200) {
           if (res.data.data) {
-            this.$Message.success({
-              content: '设备删除成功！',
-              top: 100
-            })
+            this.success_msg('设备删除成功！')
             this.get_eq_list()
           } else {
-            this.$Message.error({
-              content: '设备删除失败！',
-              top: 100
-            })
+            this.error_msg('设备删除失败！')
           }
         } else {
-          this.$Message.error({
-            content: '设备删除失败！',
-            top: 100
-          })
+          this.error_msg('设备删除失败！')
         }
       })
     },
@@ -461,6 +515,7 @@ export default {
     close_detail () {
       this.is_detail_show = true
       this.is_editor = false
+      this.time_interval = ''
     },
     // 新建、编辑表单提交
     handleSubmit (name) {
@@ -471,15 +526,33 @@ export default {
           if (!this.is_editor) {
             addEquipment(this.formValidate).then(res => {
               console.log(res)
-            })
-            this.$Message.success({
-              content: '添加产品成功！',
-              top: 100
+              if (res.data.status === 1) {
+                this.success_msg('添加产品成功！')
+                this.is_add_show = true
+                this.get_eq_list()
+              } else {
+                this.error_msg('添加产品失败！')
+              }
             })
           } else {
-            this.$Message.success({
-              content: '修改产品成功！',
-              top: 100
+            let data = {
+              device_type: this.formValidate.device_type,
+              device_imei: this.formValidate.device_imei,
+              device_model: this.formValidate.device_model,
+              device_name: this.formValidate.device_name,
+              device_ptype: this.formValidate.device_ptype,
+              product_id: this.formValidate.product_id,
+              device_id: this.formValidate.device_id
+            }
+            updataEquipment(data).then(res => {
+              console.log(res)
+              if (res.data.data) {
+                this.success_msg('修改设备成功！')
+                this.is_add_show = true
+                this.get_eq_list()
+              } else {
+                this.error_msg('修改设备失败！')
+              }
             })
           }
         } else {
@@ -501,28 +574,23 @@ export default {
       this.is_detail_show = true
       this.is_editor = true
       this.formValidate = this.sel
+      console.log(this.formValidate)
     },
     // 监听标签切换获取设备数据
     get_eq_data (val) {
       if (val === 1) {
         this.detail_loading = true
-        getEquipmentdetail(this.sel.device_id).then(res => {
-          console.log(res)
-          if (res.status === 200) {
-            this.eq_detail_list = res.data.data
-          } else {
-            this.$Message.error({
-              content: '获取设备数据失败！',
-              top: 100
-            })
-          }
-          this.detail_loading = false
-        })
+        this.get_eq_data_list()
       }
+    },
+    // 时间范围选择
+    check_time (time) {
+      this.time_interval = time
     },
     // 设备数据时间搜索
     handleSearch_eq () {
       console.log(this.time_interval)
+      this.get_eq_data_list()
     },
     // 设备数据导出
     handleExport_eq () {
@@ -531,10 +599,15 @@ export default {
     // 设备数据换页
     handlepage_eq (val) {
       console.log(val)
+      this.de_page_index = val
+      this.get_eq_data_list()
     },
     // 设备数据切换每页条数
     handlepagesize_eq (val) {
       console.log(val)
+      this.de_page_index = 1
+      this.de_ps = val
+      this.get_eq_data_list()
     },
     // 批量导入选择文件
     sel_file (e) {

@@ -84,7 +84,8 @@ export default [
     name: 'components',
     meta: {
       icon: 'logo-buffer',
-      title: '设备管理'
+      title: '设备管理',
+      access: ['manage']
     },
     component: Main,
     children: [
@@ -156,7 +157,8 @@ export default [
         name: 'productList_page',
         meta: {
           icon: 'md-grid',
-          title: '产品列表'
+          title: '产品列表',
+          access: ['manage_product_view']
         },
         component: () => import('@/view/components/product/product.vue')
       },
@@ -165,7 +167,8 @@ export default [
         name: 'equipmentList_page',
         meta: {
           icon: 'logo-codepen',
-          title: '设备列表'
+          title: '设备列表',
+          access: ['manage_device_view']
         },
         component: () => import('@/view/components/equipment/equipmentList.vue')
       },
@@ -183,7 +186,8 @@ export default [
         name: 'groupmana_page',
         meta: {
           icon: 'logo-dropbox',
-          title: '分组管理'
+          title: '分组管理',
+          access: ['manage_group_view']
         },
         component: () => import('@/view/components/groupmana/groupmana.vue')
       }
@@ -232,7 +236,8 @@ export default [
     name: 'permissions',
     meta: {
       icon: 'md-key',
-      title: '权限管理'
+      title: '权限管理',
+      access: ['sys']
     },
     component: Main,
     children: [
@@ -241,7 +246,8 @@ export default [
         name: 'organization_page',
         meta: {
           icon: 'md-git-merge',
-          title: '组织机构'
+          title: '组织机构',
+          access: ['sys_org_view']
         },
         component: () => import('@/view/permissions/organization/organization.vue')
       },
@@ -250,7 +256,8 @@ export default [
         name: 'rolemana_page',
         meta: {
           icon: 'ios-people',
-          title: '角色管理'
+          title: '角色管理',
+          accsee: ['sys_role_view']
         },
         component: () => import('@/view/permissions/rolemana/rolemana.vue')
       },
@@ -259,7 +266,8 @@ export default [
         name: 'accountmana_page',
         meta: {
           icon: 'md-person-add',
-          title: '账户管理'
+          title: '账户管理',
+          access: ['sys_user_view']
         },
         component: () => import('@/view/permissions/accountmana/accountmana.vue')
       }

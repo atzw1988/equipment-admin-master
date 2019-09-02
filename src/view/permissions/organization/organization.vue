@@ -189,6 +189,7 @@ export default {
         params.orgName = this.searchValue
       }
       getOrganizationList(params).then(res => {
+        console.log(res)
         if (res.status === 200) {
           this.total_ps_org = res.data.data.total
           this.org_list = res.data.data.records

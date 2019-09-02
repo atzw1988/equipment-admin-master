@@ -2,6 +2,7 @@ import {
   login,
   logout,
   getUserInfo,
+  getUserAccess,
   getMessage,
   getContentByMsgId,
   hasRead,
@@ -81,7 +82,6 @@ export default {
           userName,
           password
         }).then(res => {
-          console.log(res)
           const data = res.headers
           commit('setToken', data.authorization)
           resolve(res)
@@ -94,7 +94,6 @@ export default {
     handleLogOut ({ state, commit }) {
       return new Promise((resolve, reject) => {
         logout(state.token).then((res) => {
-          console.log(res)
           commit('setToken', '')
           commit('setAccess', [])
           resolve()
@@ -112,14 +111,20 @@ export default {
       return new Promise((resolve, reject) => {
         try {
           getUserInfo(state.token).then(res => {
-            console.log(res)
             const data = res.data.data
-            let access = ['admin']
             commit('setAvatar', 'https://file.iviewui.com/dist/a0e88e83800f138b94d2414621bd9704.png')
             commit('setUserName', data.login_name)
             commit('setUserId', data.user_id)
-            commit('setAccess', access)
             commit('setHasGetInfo', true)
+            let params = {
+              userId: res.data.data.user_id
+            }
+            getUserAccess(params).then(res => {
+              let access = res.data.data.map(item => {
+                return item.modules_permission
+              })
+              commit('setAccess', access)
+            })
             resolve(data)
           }).catch(err => {
             reject(err)

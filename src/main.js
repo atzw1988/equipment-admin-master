@@ -17,6 +17,12 @@ import TreeTable from 'tree-table-vue'
 import VOrgTree from 'v-org-tree'
 import 'v-org-tree/dist/v-org-tree.css'
 import show_msg from './libs/base.js'
+import {
+  Table,
+  TableColumn,
+  Checkbox,
+  CheckboxGroup
+} from 'element-ui'
 // 实际打包时应该不引入mock
 /* eslint-disable */
 // if (process.env.NODE_ENV !== 'production') require('@/mock')
@@ -27,6 +33,10 @@ Vue.use(iView, {
 Vue.use(TreeTable)
 Vue.use(VOrgTree)
 Vue.use(show_msg)
+Vue.use(Table)
+Vue.use(TableColumn)
+Vue.use(Checkbox)
+Vue.use(CheckboxGroup)
 /**
  * @description 注册admin内置插件
  */

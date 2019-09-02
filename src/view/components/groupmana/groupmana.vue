@@ -1,3 +1,10 @@
+<!--
+ * @Description: In User Settings Edit
+ * @Author: your name
+ * @Date: 2019-07-24 15:32:36
+ * @LastEditTime: 2019-08-27 18:02:32
+ * @LastEditors: Please set LastEditors
+ -->
 <template>
   <div>
     <Card v-if="is_add_show && is_detail_show">
@@ -69,40 +76,40 @@
                 <Option v-for="item in operatorList" :value="item.value" :key="item.value">{{ item.label }}</Option>
               </Select>&nbsp;
               <Select class="sel-function" v-model="sel_eq_product" clearable style="width:100px" placeholder="全部产品">
-                <Option v-for="item in productList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+                <Option v-for="item in productList" :value="item.product_id" :key="item.product_id">{{ item.product_name }}</Option>
               </Select>&nbsp;
               <Select class="sel-function" v-model="sel_eq_status" clearable style="width:100px" placeholder="全部状态">
-                <Option value="online">在线</Option>
-                <Option value="offline">离线</Option>
+                <Option value="1">在线</Option>
+                <Option value="0">离线</Option>
               </Select>&nbsp;
               <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
-              <Button @click="handleDel_eq" class="export-btn" type="error">移除</Button>
+              <Button @click="handleDel_eq" class="export-btn" type="error">批量移除</Button>
               <Button @click="handleAdd_eq" class="export-btn" type="success">添加设备</Button>
             </div>
             <div>
-              <Table  @on-selection-change='table_sel' border :columns="detail_columns" :data="tableData"></Table>
-              <Page :total="40" size="small" show-total show-elevator show-sizer transfer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
+              <Table :loading='eq_de_loading'  @on-selection-change='table_sel' border :columns="detail_columns" :data="group_eq_data"></Table>
+              <Page :total="de_total" size="small" show-total show-elevator show-sizer transfer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
             </div>
           </TabPane>
         </Tabs>
       </div>
     </Card>
     <Drawer width='800' title="添加设备" :mask-closable="false" v-model="is_drawer_show" class="add_content">
-      <Input class="sel-function" v-model="sel_eq_name" placeholder="可输入设备名称关键字" clearable style="width: 150px" />&nbsp;
-      <Select class="sel-function" v-model="sel_eq_operator" clearable style="width:100px" placeholder="全部运营商">
+      <Input class="sel-function" v-model="sel_unpeq_name" placeholder="可输入设备名称关键字" clearable style="width: 150px" />&nbsp;
+      <Select class="sel-function" v-model="sel_unpeq_operator" clearable style="width:100px" placeholder="全部运营商">
         <Option v-for="item in operatorList" :value="item.value" :key="item.value">{{ item.label }}</Option>
       </Select>&nbsp;
-      <Select class="sel-function" v-model="sel_eq_product" clearable style="width:100px" placeholder="全部产品">
-        <Option v-for="item in productList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+      <Select class="sel-function" v-model="sel_unpeq_product" clearable style="width:100px" placeholder="全部产品">
+        <Option v-for="item in productList" :value="item.product_id" :key="item.product_id">{{ item.product_name }}</Option>
       </Select>&nbsp;
-      <Select class="sel-function" v-model="sel_eq_status" clearable style="width:100px" placeholder="全部状态">
-        <Option value="online">在线</Option>
-        <Option value="offline">离线</Option>
+      <Select class="sel-function" v-model="sel_unpeq_status" clearable style="width:100px" placeholder="全部状态">
+        <Option value="1">在线</Option>
+        <Option value="0">离线</Option>
       </Select>&nbsp;
-      <Button @click="handleSearch_eq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
+      <Button @click="handleSearch_unpeq" class="search-btn" type="primary">&nbsp;搜索&nbsp;</Button>
       <div style="margin-top:20px">
-        <Table  @on-selection-change='table_sel_add' border :columns="add_columns" :data="tableData"></Table>
-        <Page :total="40" size="small" show-total show-elevator show-sizer transfer @on-change="handlepage_eq" @on-page-size-change='handlepagesize_eq'/>
+        <Table :loading='ung_loading' @on-selection-change='table_sel_add' border :columns="add_columns" :data="ungroup_eq_data"></Table>
+        <Page :total="ung_total" size="small" show-total show-elevator show-sizer transfer @on-change="handlepage_eq_nobind" @on-page-size-change='handlepagesize_eq_nobind'/>
       </div>
       <div class="add_eq_btn">
         <Button @click="handleCancel">取消</Button>
@@ -115,26 +122,23 @@
 <script>
 // import Tables from '_c/tables'
 import './groupmana.less'
-import { getGroupList, addGroup, updateGroup, deleteGroup } from '@/api/groupmana'
+import { getAllProduct } from '@/api/equipment'
+import { getGroupList, addGroup, updateGroup, deleteGroup, getGroupEqList, deleteGroupEq, addGroupEq, getUngroupEqList } from '@/api/groupmana'
 export default {
   name: 'tables_page',
   data () {
     return {
       sel_product: '',
-      productList: [
-        { value: 'one', label: '产品1' },
-        { value: 'two', label: '产品2' },
-        { value: 'three', label: '产品3' }
-      ],
+      productList: [],
       sel_operator: '',
       operatorList: [
-        { value: 'one', label: '中国移动' },
-        { value: 'two', label: '中国电信' },
-        { value: 'three', label: '中国联通' }
+        { value: '1', label: '中国移动' },
+        { value: '0', label: '中国电信' },
+        { value: '2', label: '中国联通' }
       ],
-      eq_total: 1000,
-      eq_online: 900,
-      eq_offline: 100,
+      eq_total: 0,
+      eq_online: 0,
+      eq_offline: 0,
       columns: [
         { title: '分组名称', key: 'group_name' },
         { title: '分组ID', key: 'group_id' },
@@ -210,25 +214,6 @@ export default {
           { required: true, message: '分组名称是必填选项', trigger: 'blur' }
         ]
       },
-      eq_kind: [
-        {
-          value: '地磁',
-          label: '地磁'
-        },
-        {
-          value: '定位器',
-          label: '定位器'
-        },
-        {
-          value: '井盖',
-          label: '井盖'
-        },
-        {
-          value: '地锁',
-          label: '地锁'
-        }
-      ],
-      eq_kind_sel: 'CMCC',
       sel: {},
       sel_eq_name: '',
       sel_eq_imei: '',
@@ -237,11 +222,11 @@ export default {
       sel_eq_status: '',
       detail_columns: [
         { type: 'selection', width: 60, align: 'center' },
-        { title: '设备名称', key: 'name' },
-        { title: 'IMEI', key: 'name' },
-        { title: '运营商', key: 'name' },
-        { title: '归属产品', key: 'name' },
-        { title: '设备状态', key: 'name' },
+        { title: '设备名称', key: 'device_name' },
+        { title: 'IMEI', key: 'device_imei' },
+        { title: '运营商', key: 'device_type_name' },
+        { title: '归属产品', key: 'product_name' },
+        { title: '设备状态', key: 'device_state_name' },
         {
           title: '操作',
           key: 'handle',
@@ -290,17 +275,31 @@ export default {
           }
         }
       ],
+      de_page_index: 1,
+      de_ps: 10,
+      de_total: 0,
+      group_eq_data: [],
+      eq_de_loading: false,
       is_batch_show: false,
       file_name: '点击选择',
       batch_file: '',
       add_columns: [
         { type: 'selection', width: 60, align: 'center' },
-        { title: '设备名称', key: 'name' },
-        { title: 'IMEI', key: 'name' },
-        { title: '运营商', key: 'name' },
-        { title: '归属产品', key: 'name' },
-        { title: '设备状态', key: 'name' }
+        { title: '设备名称', key: 'device_name' },
+        { title: 'IMEI', key: 'device_imei' },
+        { title: '运营商', key: 'device_type_name' },
+        { title: '归属产品', key: 'product_name' },
+        { title: '设备状态', key: 'device_state_name' }
       ],
+      ung_page_index: 1,
+      ung_ps: 10,
+      ung_total: 0,
+      ung_loading: false,
+      ungroup_eq_data: [],
+      sel_unpeq_name: '',
+      sel_unpeq_operator: '',
+      sel_unpeq_product: '',
+      sel_unpeq_status: '',
       sel_add_eq: []
     }
   },
@@ -316,11 +315,114 @@ export default {
         params.group_name = this.searchValue
       }
       getGroupList(params).then(res => {
+        console.log(res)
         if (res.data.status === 1) {
           this.total_ps = res.data.data.total
           this.group_list = res.data.data.records
         }
         this.loading = false
+      })
+    },
+    // 获取分组设备列表
+    get_group_eq_list () {
+      this.eq_de_loading = true
+      let params = {
+        group_id: this.sel.group_id,
+        currentPage: this.de_page_index,
+        pageSize: this.de_ps
+      }
+      if (this.sel_eq_name) {
+        params.device_name = this.sel_eq_name
+      }
+      if (this.sel_eq_imei) {
+        params.device_imei = this.sel_eq_imei
+      }
+      if (this.sel_eq_operator) {
+        params.device_type = this.sel_eq_operator
+      }
+      if (this.sel_eq_product) {
+        params.product_id = this.sel_eq_operator
+      }
+      if (this.sel_eq_status) {
+        params.device_state = this.sel_eq_status
+      }
+      getGroupEqList(params).then(res => {
+        console.log(res)
+        if (res.data.status === 1) {
+          let list = res.data.data.page.records
+          list.forEach(item => {
+            if (item.device_state === 0) {
+              item.device_state_name = '离线'
+            } else if (item.device_state === 1) {
+              item.device_state_name = '在线'
+            } else {
+              item.device_state_name = '未知'
+            }
+            if (item.device_type === 0) {
+              item.device_type_name = '中国电信'
+            } else if (item.device_type === 1) {
+              item.device_type_name = '中国移动'
+            } else {
+              item.device_type_name = '中国联通'
+            }
+          })
+          this.eq_total = res.data.data.count.allcount
+          this.eq_online = res.data.data.count.online
+          this.eq_offline = res.data.data.count.offline
+          this.de_total = res.data.data.total
+          this.group_eq_data = list
+        } else {
+          this.notice_error_msg('获取设备列表失败！')
+        }
+        this.eq_de_loading = false
+      })
+    },
+    // 获取未分组的设备列表
+    get_ungroup_eq_list () {
+      this.ung_loading = true
+      let params = {
+        group_id: this.sel.group_id,
+        currentPage: this.ung_page_index,
+        pageSize: this.ung_ps
+      }
+      if (this.sel_unpeq_name) {
+        params.device_name = this.sel_unpeq_name
+      }
+      if (this.sel_unpeq_operator) {
+        params.device_type = this.sel_unpeq_operator
+      }
+      if (this.sel_unpeq_product) {
+        params.product_id = this.sel_unpeq_product
+      }
+      if (this.sel_unpeq_status) {
+        params.device_state = this.sel_unpeq_status
+      }
+      getUngroupEqList(params).then(res => {
+        console.log(res)
+        if (res.data.status === 1) {
+          let list = res.data.data.records
+          list.forEach(item => {
+            if (item.device_state === 0) {
+              item.device_state_name = '离线'
+            } else if (item.device_state === 1) {
+              item.device_state_name = '在线'
+            } else {
+              item.device_state_name = '未知'
+            }
+            if (item.device_type === 0) {
+              item.device_type_name = '中国电信'
+            } else if (item.device_type === 1) {
+              item.device_type_name = '中国移动'
+            } else {
+              item.device_type_name = '中国联通'
+            }
+          })
+          this.ung_total = res.data.data.total
+          this.ungroup_eq_data = list
+        } else {
+          this.error_msg('获取数据失败！')
+        }
+        this.ung_loading = false
       })
     },
     // 分组搜索
@@ -338,6 +440,7 @@ export default {
       this.is_detail_show = false
       this.is_editor = true
       this.sel = this.group_list[index]
+      this.get_group_eq_list()
     },
     // 表格内删除
     remove (index) {
@@ -391,6 +494,7 @@ export default {
         if (valid) {
           if (!this.is_editor) {
             addGroup(this.formValidate).then(res => {
+              console.log(res)
               if (res.data.status === 1) {
                 this.$Message.success({
                   content: '创建分组成功！',
@@ -447,22 +551,37 @@ export default {
     get_eq_data (val) {
       if (val === 1) {
         console.log('获取设备数据')
+        getAllProduct().then(res => {
+          console.log(res)
+          if (res.data.status === 1) {
+            this.productList = res.data.data
+            console.log(this.productList)
+          }
+        })
       }
     },
     // 批量移除设备
     handleDel_eq () {
       if (this.sel_delete.length > 0) {
+        let list = this.sel_delete.map(item => {
+          return item.device_id
+        })
         this.$Modal.confirm({
           title: '温馨提示',
           content: '确定要删除选中的设备吗？',
           onOk: () => {
-            this.$Message.success({
-              content: '所选设备删除成功！',
-              top: 100
+            deleteGroupEq(this.sel.group_id, list.join(',')).then(res => {
+              console.log(res)
+              if (res.data.status === 1) {
+                this.success_msg('所选设备移除成功！')
+                this.get_group_eq_list()
+              } else {
+                this.error_msg('所选设备移除失败！')
+              }
             })
           },
           onCancel: () => {
-            this.$Message.info('Clicked cancel')
+
           }
         })
       } else {
@@ -472,6 +591,7 @@ export default {
     // 设备列表添加设备
     handleAdd_eq () {
       this.is_drawer_show = true
+      this.get_ungroup_eq_list()
     },
     // 表格内选择
     table_sel (val) {
@@ -485,34 +605,68 @@ export default {
     // 设备列表表格内移出
     remove_eq (index) {
       console.log(index)
-      this.$Message.success({
-        content: '设备删除成功！',
-        top: 100
+      deleteGroupEq(this.sel.group_id, this.group_eq_data[index].device_id).then(res => {
+        if (res.data.status === 1) {
+          this.success_msg('移除设备成功！')
+          this.get_group_eq_list()
+        } else {
+          this.error_msg('移除设备失败！')
+        }
       })
     },
     // 设备列表搜索
     handleSearch_eq () {
-      console.log(this.time_interval)
+      this.get_group_eq_list()
     },
     // 设备列表换页
     handlepage_eq (val) {
-      console.log(val)
+      this.de_page_index = val
+      this.get_group_eq_list()
     },
     // 设备列表切换每页条数
     handlepagesize_eq (val) {
-      console.log(val)
+      this.de_page_index = 1
+      this.de_ps = val
+      this.get_group_eq_list()
     },
     // 监听表格添加设备
     table_sel_add (val) {
-      console.log(val)
       this.sel_add_eq = val
+    },
+    // 添加页面换页
+    handlepage_eq_nobind (val) {
+      this.ung_page_index = val
+      this.get_ungroup_eq_list()
+    },
+    // 添加设备页面换每页条数
+    handlepagesize_eq_nobind (val) {
+      this.ung_page_index = 1
+      this.ung_ps = val
+      this.get_ungroup_eq_list()
+    },
+    // 添加页面搜搜
+    handleSearch_unpeq () {
+      this.get_ungroup_eq_list()
     },
     // 确认添加设备
     handleSubmit_eq () {
       if (this.sel_add_eq.length > 0) {
-        this.$Message.success({
-          content: '设备添加成功！',
-          top: 100
+        let list = this.sel_add_eq.map(item => {
+          return item.device_id
+        })
+        let data = {
+          device_id: list.join(','),
+          group_id: this.sel.group_id
+        }
+        addGroupEq(data).then(res => {
+          console.log(res)
+          if (res.data.status === 1) {
+            this.success_msg('所选设备添加成功！')
+            this.is_drawer_show = false
+            this.get_group_eq_list()
+          } else {
+            this.error_msg('所选设备添加失败！')
+          }
         })
       } else {
         this.$Notice.error({
